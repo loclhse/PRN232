@@ -1,4 +1,7 @@
 
+using Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+
 namespace PRN2322
 {
     public class Program
@@ -13,6 +16,10 @@ namespace PRN2322
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+
+            // DbContext Configuration
+            builder.Services.AddDbContext<AppDbContext>(options =>
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             var app = builder.Build();
 
