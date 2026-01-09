@@ -65,6 +65,24 @@ namespace Infrastructure.Configurations
                 .Property(od => od.UnitPrice)
                 .HasPrecision(18, 2);
 
+            modelBuilder.Entity<OrderDetail>()
+                .HasOne(od => od.Order)
+                .WithMany(o => o.OrderDetails)
+                .HasForeignKey(od => od.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<OrderDetail>()
+                .HasOne(od => od.Product)
+                .WithMany(p => p.OrderDetails)
+                .HasForeignKey(od => od.ItemId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<OrderDetail>()
+                .HasOne(od => od.GiftBox)
+                .WithMany(gb => gb.OrderDetails)
+                .HasForeignKey(od => od.ItemId)
+                .OnDelete(DeleteBehavior.NoAction);
+
             modelBuilder.Entity<Order>()
                 .Property(o => o.TotalAmount)
                 .HasPrecision(18, 2);
