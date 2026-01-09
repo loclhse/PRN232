@@ -99,11 +99,6 @@ namespace Infrastructure.Migrations
                     b.Property<int?>("ParentId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ParentId");

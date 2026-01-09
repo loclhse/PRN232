@@ -1,6 +1,4 @@
-
-using Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
+using Infrastructure;
 
 namespace PRN2322
 {
@@ -17,9 +15,8 @@ namespace PRN2322
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            // DbContext Configuration
-            builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            // Infrastructure Services (DbContext, Repos, etc.)
+            builder.Services.AddInfrastructure(builder.Configuration);
 
             var app = builder.Build();
 

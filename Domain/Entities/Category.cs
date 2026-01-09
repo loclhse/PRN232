@@ -12,10 +12,6 @@ namespace Domain.Entities
         [MaxLength(100)]
         public string Name { get; set; } = string.Empty;
 
-        [Required]
-        [MaxLength(150)]
-        public string Slug { get; set; } = string.Empty;
-
         public int? ParentId { get; set; }
 
         [ForeignKey("ParentId")]

@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260109184807_InitialCreate")]
+    [Migration("20260109190633_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -101,11 +101,6 @@ namespace Infrastructure.Migrations
 
                     b.Property<int?>("ParentId")
                         .HasColumnType("int");
-
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
 
                     b.HasKey("Id");
 
