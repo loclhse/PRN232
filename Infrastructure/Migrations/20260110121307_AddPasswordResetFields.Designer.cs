@@ -4,6 +4,7 @@ using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260110121307_AddPasswordResetFields")]
+    partial class AddPasswordResetFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -99,7 +102,7 @@ namespace Infrastructure.Migrations
                             Id = 1,
                             Address = "Ho Chi Minh City",
                             BranchName = "HappyBox HQ",
-                            CreatedAt = new DateTime(2026, 1, 10, 13, 12, 46, 742, DateTimeKind.Utc).AddTicks(9948),
+                            CreatedAt = new DateTime(2026, 1, 10, 12, 13, 6, 903, DateTimeKind.Utc).AddTicks(5666),
                             IsDeleted = false,
                             Phone = "0909000111",
                             Region = "HCM"
@@ -628,7 +631,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 1, 10, 13, 12, 46, 742, DateTimeKind.Utc).AddTicks(9784),
+                            CreatedAt = new DateTime(2026, 1, 10, 12, 13, 6, 903, DateTimeKind.Utc).AddTicks(5500),
                             Description = "System Administrator",
                             IsDeleted = false,
                             RoleName = "Admin"
@@ -636,7 +639,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 1, 10, 13, 12, 46, 742, DateTimeKind.Utc).AddTicks(9788),
+                            CreatedAt = new DateTime(2026, 1, 10, 12, 13, 6, 903, DateTimeKind.Utc).AddTicks(5503),
                             Description = "Staff/Employee",
                             IsDeleted = false,
                             RoleName = "Staff"
@@ -644,7 +647,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2026, 1, 10, 13, 12, 46, 742, DateTimeKind.Utc).AddTicks(9789),
+                            CreatedAt = new DateTime(2026, 1, 10, 12, 13, 6, 903, DateTimeKind.Utc).AddTicks(5504),
                             Description = "Registered Customer",
                             IsDeleted = false,
                             RoleName = "Customer"
@@ -652,7 +655,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 4,
-                            CreatedAt = new DateTime(2026, 1, 10, 13, 12, 46, 742, DateTimeKind.Utc).AddTicks(9790),
+                            CreatedAt = new DateTime(2026, 1, 10, 12, 13, 6, 903, DateTimeKind.Utc).AddTicks(5505),
                             Description = "Guest User",
                             IsDeleted = false,
                             RoleName = "Guest"
@@ -698,16 +701,13 @@ namespace Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<string>("OtpCode")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("OtpExpiryTime")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("PasswordResetToken")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Phone")
                         .IsRequired()
@@ -718,6 +718,9 @@ namespace Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("RefreshTokenExpiryTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ResetTokenExpiryTime")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("RoleId")
@@ -753,7 +756,7 @@ namespace Infrastructure.Migrations
                             FullName = "System Admin",
                             IsActive = true,
                             IsDeleted = false,
-                            PasswordHash = "$2a$11$X8o8g2Vx65CdDxzvhFQ/1emWG9VdLicNv4EFfkN8suJboAaIrNl12",
+                            PasswordHash = "$2a$11$hnfxS6MuWkwGM9yaHMVeKeUmK4k.CrpLdsdxYsiwkD03tEEuBrz5S",
                             Phone = "",
                             RoleId = 1,
                             Username = "admin"
@@ -768,7 +771,7 @@ namespace Infrastructure.Migrations
                             FullName = "Nguyen Van Staff",
                             IsActive = true,
                             IsDeleted = false,
-                            PasswordHash = "$2a$11$6inOKdnOPy/TKOjtwQjHc.iDFpFqvZStg47c.JHA1ZNZ58PMBsK9u",
+                            PasswordHash = "$2a$11$J..JuRZ5z81M8osUj1I/KuLtzurjENOXfHtFaXawOqhI.kOs05kwa",
                             Phone = "",
                             RoleId = 2,
                             Username = "staff"

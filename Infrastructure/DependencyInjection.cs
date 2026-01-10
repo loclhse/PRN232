@@ -27,6 +27,7 @@ namespace Infrastructure
             
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IMailService, MailService>();
 
             // Cấu hình JWT Authentication
             var jwtSettings = configuration.GetSection("Jwt");

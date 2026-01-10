@@ -1,4 +1,5 @@
-using Application.DTOs;
+using Application.DTOs.Request;
+using Application.DTOs.Response;
 using Application.IService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -81,6 +82,32 @@ namespace PRN2322.Controllers
             }
 
             return Ok(result);
+        }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            var result = await _authService.ForgotPassword(request.Email);
+            
+            // Luôn trả về Ok để tránh bị lộ Email có tồn tại trong hệ thống hay không (Security Best Practice)
+            return Ok(new { message = "If your email exists in our system, you will receive a reset link." });
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordWithOtpRequest request)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            var result = await _authService.ResetPassword(request);
+
+            if (!result)
+            {
+                return BadRequest("Invalid or expired OTP code.");
+            }
+
+            return Ok(new { message = "Password has been reset successfully." });
         }
     }
 }

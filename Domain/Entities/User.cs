@@ -32,6 +32,8 @@ namespace Domain.Entities
 
         public string? RefreshToken { get; set; }
         public DateTime? RefreshTokenExpiryTime { get; set; }
+        public string? OtpCode { get; set; }
+        public DateTime? OtpExpiryTime { get; set; }
 
         // Foreign Keys
         public int RoleId { get; set; }

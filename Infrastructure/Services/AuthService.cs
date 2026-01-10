@@ -1,4 +1,5 @@
-using Application.DTOs;
+using Application.DTOs.Request;
+using Application.DTOs.Response;
 using Application.IService;
 using Domain.Entities;
 using Domain.IUnitOfWork;
@@ -12,12 +13,14 @@ namespace Infrastructure.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly ITokenService _tokenService;
         private readonly IConfiguration _configuration;
+        private readonly IMailService _mailService;
 
-        public AuthService(IUnitOfWork unitOfWork, ITokenService tokenService, IConfiguration configuration)
+        public AuthService(IUnitOfWork unitOfWork, ITokenService tokenService, IConfiguration configuration, IMailService mailService)
         {
             _unitOfWork = unitOfWork;
             _tokenService = tokenService;
             _configuration = configuration;
+            _mailService = mailService;
         }
 
         public async Task<TokenModel?> LoginWithGoogle(string credential)
@@ -124,6 +127,57 @@ namespace Infrastructure.Services
             };
 
             await userRepository.AddAsync(user);
+            return await _unitOfWork.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> ForgotPassword(string email)
+        {
+            var userRepository = _unitOfWork.Repository<User>();
+            var user = await userRepository.GetFirstOrDefaultAsync(u => u.Email == email);
+            if (user == null) return false;
+
+            // Tạo mã OTP 6 chữ số
+            var otpCode = new Random().Next(100000, 999999).ToString();
+            user.OtpCode = otpCode;
+            user.OtpExpiryTime = DateTime.UtcNow.AddMinutes(5); // OTP chỉ có hiệu lực trong 5 phút
+
+            await _unitOfWork.SaveChangesAsync();
+
+            var subject = "Your OTP Code - HappyBox";
+            var body = $@"
+                <div style='font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 10px;'>
+                    <h2 style='color: #4CAF50;'>Hello {user.FullName},</h2>
+                    <p>You requested to reset your password. Use the OTP code below to proceed:</p>
+                    <div style='font-size: 24px; font-weight: bold; background: #f4f4f4; padding: 10px; display: inline-block; letter-spacing: 5px;'>
+                        {otpCode}
+                    </div>
+                    <p>This code will expire in <b>5 minutes</b>.</p>
+                    <p>If you didn't request this, please ignore this email.</p>
+                </div>";
+
+            try
+            {
+                await _mailService.SendEmailAsync(user.Email, subject, body);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> ResetPassword(ResetPasswordWithOtpRequest request)
+        {
+            var userRepository = _unitOfWork.Repository<User>();
+            var user = await userRepository.GetFirstOrDefaultAsync(
+                u => u.Email == request.Email && u.OtpCode == request.Otp && u.OtpExpiryTime > DateTime.UtcNow);
+
+            if (user == null) return false;
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            user.OtpCode = null;
+            user.OtpExpiryTime = null;
+
             return await _unitOfWork.SaveChangesAsync() > 0;
         }
 

@@ -1,4 +1,4 @@
-using Application.DTOs;
+using Application.DTOs.Response;
 using Domain.Entities;
 using System.Security.Claims;
 
