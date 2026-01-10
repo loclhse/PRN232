@@ -3,11 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Entities
 {
-    public class Payment
+    public class Payment : BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
-
         public int OrderId { get; set; }
 
         [Required]
@@ -23,8 +20,6 @@ namespace Domain.Entities
 
         [MaxLength(100)]
         public string? TransactionReference { get; set; }
-
-        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
         [ForeignKey("OrderId")]
         public virtual Order Order { get; set; } = null!;

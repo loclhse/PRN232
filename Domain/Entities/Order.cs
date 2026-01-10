@@ -3,11 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Entities
 {
-    public class Order
+    public class Order : BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
-
         [Required]
         [MaxLength(50)]
         public string OrderNumber { get; set; } = string.Empty;
@@ -33,8 +30,6 @@ namespace Domain.Entities
         public string CurrentStatus { get; set; } = "PENDING";
 
         public string? Note { get; set; }
-
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [ForeignKey("UserId")]
         public virtual User User { get; set; } = null!;

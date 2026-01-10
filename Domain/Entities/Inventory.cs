@@ -4,10 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Domain.Entities
 {
     // Note: Composite key (BranchId, ProductId) might be good, or just Id
-    public class Inventory
+    public class Inventory : BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
 
         public int BranchId { get; set; }
         public int ProductId { get; set; }

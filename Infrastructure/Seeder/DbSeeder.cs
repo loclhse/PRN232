@@ -26,7 +26,7 @@ namespace Infrastructure.Seeder
                 { 
                     Id = 1, 
                     Username = "admin", 
-                    PasswordHash = "123456", // Mật khẩu demo
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
                     FullName = "System Admin", 
                     Email = "admin@happybox.vn", 
                     RoleId = 1, // Admin
@@ -37,7 +37,7 @@ namespace Infrastructure.Seeder
                 { 
                     Id = 2, 
                     Username = "staff", 
-                    PasswordHash = "123456", // Mật khẩu demo
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
                     FullName = "Nguyen Van Staff", 
                     Email = "staff@happybox.vn", 
                     RoleId = 2, // Staff

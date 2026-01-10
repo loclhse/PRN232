@@ -9,11 +9,10 @@ namespace PRN2322
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            
+            // Web Services (CORS, Swagger, etc.)
+            builder.Services.AddWebServices();
 
             // Infrastructure Services (DbContext, Repos, etc.)
             builder.Services.AddInfrastructure(builder.Configuration);
@@ -28,7 +27,10 @@ namespace PRN2322
             }
 
             app.UseHttpsRedirection();
+            
+            app.UseCors("AllowFrontend"); // Phải đặt trước Authentication và Authorization
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
 

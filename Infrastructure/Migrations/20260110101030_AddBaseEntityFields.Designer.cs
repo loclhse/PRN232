@@ -4,6 +4,7 @@ using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260110101030_AddBaseEntityFields")]
+    partial class AddBaseEntityFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -99,7 +102,7 @@ namespace Infrastructure.Migrations
                             Id = 1,
                             Address = "Ho Chi Minh City",
                             BranchName = "HappyBox HQ",
-                            CreatedAt = new DateTime(2026, 1, 10, 10, 38, 24, 549, DateTimeKind.Utc).AddTicks(5771),
+                            CreatedAt = new DateTime(2026, 1, 10, 10, 10, 30, 450, DateTimeKind.Utc).AddTicks(3696),
                             IsDeleted = false,
                             Phone = "0909000111",
                             Region = "HCM"
@@ -628,7 +631,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 1, 10, 10, 38, 24, 549, DateTimeKind.Utc).AddTicks(5607),
+                            CreatedAt = new DateTime(2026, 1, 10, 10, 10, 30, 450, DateTimeKind.Utc).AddTicks(3521),
                             Description = "System Administrator",
                             IsDeleted = false,
                             RoleName = "Admin"
@@ -636,7 +639,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 1, 10, 10, 38, 24, 549, DateTimeKind.Utc).AddTicks(5611),
+                            CreatedAt = new DateTime(2026, 1, 10, 10, 10, 30, 450, DateTimeKind.Utc).AddTicks(3526),
                             Description = "Staff/Employee",
                             IsDeleted = false,
                             RoleName = "Staff"
@@ -644,7 +647,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2026, 1, 10, 10, 38, 24, 549, DateTimeKind.Utc).AddTicks(5612),
+                            CreatedAt = new DateTime(2026, 1, 10, 10, 10, 30, 450, DateTimeKind.Utc).AddTicks(3527),
                             Description = "Registered Customer",
                             IsDeleted = false,
                             RoleName = "Customer"
@@ -652,7 +655,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 4,
-                            CreatedAt = new DateTime(2026, 1, 10, 10, 38, 24, 549, DateTimeKind.Utc).AddTicks(5613),
+                            CreatedAt = new DateTime(2026, 1, 10, 10, 10, 30, 450, DateTimeKind.Utc).AddTicks(3528),
                             Description = "Guest User",
                             IsDeleted = false,
                             RoleName = "Guest"
@@ -747,7 +750,7 @@ namespace Infrastructure.Migrations
                             FullName = "System Admin",
                             IsActive = true,
                             IsDeleted = false,
-                            PasswordHash = "$2a$11$VFTA9N6cWiSac30HxJOcgODlKDg0YwP6mi9nicZnrQ9Mg/0qs2LG.",
+                            PasswordHash = "123456",
                             Phone = "",
                             RoleId = 1,
                             Username = "admin"
@@ -762,7 +765,7 @@ namespace Infrastructure.Migrations
                             FullName = "Nguyen Van Staff",
                             IsActive = true,
                             IsDeleted = false,
-                            PasswordHash = "$2a$11$8YyzbVNIQG6buwd923Ejsunh6NJirrvn/SPkhuUaEjulfOYOZJ9Ie",
+                            PasswordHash = "123456",
                             Phone = "",
                             RoleId = 2,
                             Username = "staff"

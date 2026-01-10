@@ -3,11 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Entities
 {
-    public class InventoryTransaction
+    public class InventoryTransaction : BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
-
         public int InventoryId { get; set; }
 
         public int QuantityChange { get; set; } // + or -
@@ -21,8 +18,6 @@ namespace Domain.Entities
 
         public string? Note { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        
         [MaxLength(100)]
         public string? CreatedBy { get; set; } // Username or StaffId
 

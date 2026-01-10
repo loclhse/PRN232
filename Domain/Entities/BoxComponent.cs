@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Domain.Entities
 {
     // Note: Composite Key (GiftBoxId, ProductId) needs configuration in DbContext (Fluent API)
-    public class BoxComponent
+    public class BoxComponent : BaseEntity
     {
         public int GiftBoxId { get; set; }
         public int ProductId { get; set; }

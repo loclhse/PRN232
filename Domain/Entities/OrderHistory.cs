@@ -3,11 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Entities
 {
-    public class OrderHistory
+    public class OrderHistory : BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
-
         public int OrderId { get; set; }
 
         [Required]
@@ -15,8 +12,6 @@ namespace Domain.Entities
         public string Status { get; set; } = string.Empty;
 
         public string? Note { get; set; }
-
-        public DateTime ChangedAt { get; set; } = DateTime.UtcNow;
 
         [MaxLength(100)]
         public string? ChangedBy { get; set; } // Username

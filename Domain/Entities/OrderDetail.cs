@@ -3,10 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Entities
 {
-    public class OrderDetail
+    public class OrderDetail : BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
 
         public int OrderId { get; set; }
 
