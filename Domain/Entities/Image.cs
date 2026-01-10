@@ -13,10 +13,9 @@ namespace Domain.Entities
         public bool IsMain { get; set; }
         public int SortOrder { get; set; }
 
-        // Polymorphic relationship simplified
-        public int OwnerId { get; set; }
-        
-        [MaxLength(50)]
-        public string OwnerType { get; set; } = string.Empty; // "Product" or "GiftBox"
+        public int? ProductId { get; set; }
+        public Product? Product { get; set; }
+        public int? GiftBoxId { get; set; }
+        public GiftBox? GiftBox { get; set; }
     }
 }

@@ -27,6 +27,20 @@ namespace Infrastructure.Configurations
                 .HasForeignKey(bc => bc.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Image - Product (nullable)
+            modelBuilder.Entity<Image>()
+                .HasOne(i => i.Product)
+                .WithMany(p => p.Images)
+                .HasForeignKey(i => i.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Image - GiftBox (nullable)
+            modelBuilder.Entity<Image>()
+                .HasOne(i => i.GiftBox)
+                .WithMany(gb => gb.Images)
+                .HasForeignKey(i => i.GiftBoxId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // Category Self-Referencing
             modelBuilder.Entity<Category>()
                 .HasOne(c => c.ParentCategory)

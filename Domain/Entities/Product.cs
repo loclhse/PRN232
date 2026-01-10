@@ -29,5 +29,6 @@ namespace Domain.Entities
         public virtual ICollection<BoxComponent> BoxComponents { get; set; } = new List<BoxComponent>();
         public virtual ICollection<Inventory> Inventories { get; set; } = new List<Inventory>();
         public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
+        public virtual ICollection<Image> Images { get; set; } = new List<Image>();
     }
 }
