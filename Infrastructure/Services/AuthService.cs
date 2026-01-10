@@ -5,6 +5,7 @@ using Domain.Entities;
 using Domain.IUnitOfWork;
 using Google.Apis.Auth;
 using Microsoft.Extensions.Configuration;
+using AutoMapper;
 
 namespace Infrastructure.Services
 {
@@ -14,13 +15,15 @@ namespace Infrastructure.Services
         private readonly ITokenService _tokenService;
         private readonly IConfiguration _configuration;
         private readonly IMailService _mailService;
+        private readonly IMapper _mapper;
 
-        public AuthService(IUnitOfWork unitOfWork, ITokenService tokenService, IConfiguration configuration, IMailService mailService)
+        public AuthService(IUnitOfWork unitOfWork, ITokenService tokenService, IConfiguration configuration, IMailService mailService, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             _tokenService = tokenService;
             _configuration = configuration;
             _mailService = mailService;
+            _mapper = mapper;
         }
 
         public async Task<TokenModel?> LoginWithGoogle(string credential)
@@ -43,17 +46,7 @@ namespace Infrastructure.Services
                 if (user == null)
                 {
                     // Create new user if not exists
-                    user = new User
-                    {
-                        Email = payload.Email,
-                        FullName = payload.Name,
-                        Username = payload.Email, // Use email as username for Google login
-                        RoleId = 3, // Default to Customer
-                        IsActive = true,
-                        CreatedAt = DateTime.UtcNow,
-                        PasswordHash = Guid.NewGuid().ToString() // Dummy password for Google users
-                    };
-
+                    user = _mapper.Map<User>(payload);
                     await userRepository.AddAsync(user);
                 }
 
@@ -113,18 +106,8 @@ namespace Infrastructure.Services
             var existingUser = await userRepository.GetFirstOrDefaultAsync(u => u.Username == request.Username || u.Email == request.Email);
             if (existingUser != null) return false;
 
-            var user = new User
-            {
-                Username = request.Username,
-                Email = request.Email,
-                FullName = request.FullName,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-                Phone = request.Phone,
-                Address = request.Address,
-                RoleId = 3, // Default role: Customer
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            };
+            var user = _mapper.Map<User>(request);
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
             await userRepository.AddAsync(user);
             return await _unitOfWork.SaveChangesAsync() > 0;
@@ -208,6 +191,18 @@ namespace Infrastructure.Services
                 AccessToken = newAccessToken,
                 RefreshToken = newRefreshToken
             };
+        }
+
+        public async Task<UserResponse?> GetProfile(string email)
+        {
+            var userRepository = _unitOfWork.Repository<User>();
+            var user = await userRepository.GetFirstOrDefaultAsync(
+                u => u.Email == email,
+                includeProperties: "Role");
+
+            if (user == null) return null;
+
+            return _mapper.Map<UserResponse>(user);
         }
     }
 }

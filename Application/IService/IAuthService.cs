@@ -12,5 +12,6 @@ namespace Application.IService
         Task<bool> ForgotPassword(string email);
         Task<bool> ResetPassword(ResetPasswordWithOtpRequest request);
         Task<TokenModel?> RefreshToken(TokenModel tokenModel);
+        Task<UserResponse?> GetProfile(string email);
     }
 }

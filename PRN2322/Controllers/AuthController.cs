@@ -2,6 +2,7 @@ using Application.DTOs.Request;
 using Application.DTOs.Response;
 using Application.IService;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 
 namespace PRN2322.Controllers
@@ -108,6 +109,19 @@ namespace PRN2322.Controllers
             }
 
             return Ok(new { message = "Password has been reset successfully." });
+        }
+
+        [Authorize]
+        [HttpGet("profile")]
+        public async Task<IActionResult> GetProfile()
+        {
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (string.IsNullOrEmpty(email)) return Unauthorized();
+
+            var result = await _authService.GetProfile(email);
+            if (result == null) return NotFound("User not found.");
+
+            return Ok(result);
         }
     }
 }

@@ -5,6 +5,9 @@ using Infrastructure.Data;
 using Infrastructure.Repositories;
 using Infrastructure.Services;
 using Infrastructure.UnitOfWork;
+using Application.Mappings;
+using Infrastructure.Mappings;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,6 +31,13 @@ namespace Infrastructure
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IMailService, MailService>();
+
+            // AutoMapper
+            services.AddAutoMapper(cfg => 
+            {
+                cfg.AddMaps(typeof(MappingProfile).Assembly);
+                cfg.AddMaps(typeof(InfrastructureProfile).Assembly);
+            });
 
             // Cấu hình JWT Authentication
             var jwtSettings = configuration.GetSection("Jwt");

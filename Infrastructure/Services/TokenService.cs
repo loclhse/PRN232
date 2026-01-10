@@ -5,16 +5,19 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using AutoMapper;
 
 namespace Infrastructure.Services
 {
     public class TokenService : ITokenService
     {
         private readonly IConfiguration _configuration;
+        private readonly IMapper _mapper;
 
-        public TokenService(IConfiguration configuration)
+        public TokenService(IConfiguration configuration, IMapper mapper)
         {
             _configuration = configuration;
+            _mapper = mapper;
         }
 
         public string GenerateAccessToken(User user)
@@ -22,14 +25,8 @@ namespace Infrastructure.Services
             var jwtSettings = _configuration.GetSection("Jwt");
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? throw new InvalidOperationException("JWT Key is not configured.")));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Name, user.FullName),
-                new Claim(ClaimTypes.Role, user.RoleId.ToString())
-            };
+            
+            var claims = _mapper.Map<IEnumerable<Claim>>(user);
 
             var token = new JwtSecurityToken(
                 issuer: jwtSettings["Issuer"],
