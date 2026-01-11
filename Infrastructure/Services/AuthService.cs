@@ -121,9 +121,12 @@ namespace Infrastructure.Services
 
             // Tạo mã OTP 6 chữ số
             var otpCode = new Random().Next(100000, 999999).ToString();
-            user.OtpCode = otpCode;
-            user.OtpExpiryTime = DateTime.UtcNow.AddMinutes(5); // OTP chỉ có hiệu lực trong 5 phút
+            
+            var userOtp = _mapper.Map<UserOtp>(user);
+            userOtp.OtpCode = otpCode;
+            userOtp.OtpType = "ForgotPassword";
 
+            await _unitOfWork.Repository<UserOtp>().AddAsync(userOtp);
             await _unitOfWork.SaveChangesAsync();
 
             var subject = "Your OTP Code - HappyBox";
@@ -152,14 +155,22 @@ namespace Infrastructure.Services
         public async Task<bool> ResetPassword(ResetPasswordWithOtpRequest request)
         {
             var userRepository = _unitOfWork.Repository<User>();
-            var user = await userRepository.GetFirstOrDefaultAsync(
-                u => u.Email == request.Email && u.OtpCode == request.Otp && u.OtpExpiryTime > DateTime.UtcNow);
-
+            var user = await userRepository.GetFirstOrDefaultAsync(u => u.Email == request.Email);
             if (user == null) return false;
 
+            var otpRepo = _unitOfWork.Repository<UserOtp>();
+            var validOtp = await otpRepo.GetFirstOrDefaultAsync(
+                o => o.UserId == user.Id && 
+                     o.OtpCode == request.Otp && 
+                     o.ExpiryTime > DateTime.UtcNow && 
+                     !o.IsUsed);
+
+            if (validOtp == null) return false;
+
+            // Mark OTP as used
+            validOtp.IsUsed = true;
+            
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
-            user.OtpCode = null;
-            user.OtpExpiryTime = null;
 
             return await _unitOfWork.SaveChangesAsync() > 0;
         }

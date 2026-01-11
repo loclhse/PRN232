@@ -32,8 +32,6 @@ namespace Domain.Entities
 
         public string? RefreshToken { get; set; }
         public DateTime? RefreshTokenExpiryTime { get; set; }
-        public string? OtpCode { get; set; }
-        public DateTime? OtpExpiryTime { get; set; }
 
         // Foreign Keys
         public int RoleId { get; set; }
@@ -54,5 +52,6 @@ namespace Domain.Entities
         public virtual Branch? Branch { get; set; }
 
         public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+        public virtual ICollection<UserOtp> UserOtps { get; set; } = new List<UserOtp>();
     }
 }

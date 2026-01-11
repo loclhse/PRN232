@@ -18,6 +18,14 @@ namespace Application.Mappings
             
             CreateMap<User, UserResponse>()
                 .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.RoleName));
+
+            // UserOtp Mapping
+            CreateMap<User, UserOtp>()
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.ExpiryTime, opt => opt.MapFrom(src => DateTime.UtcNow.AddMinutes(1)))
+                .ForMember(dest => dest.IsUsed, opt => opt.MapFrom(src => false))
+                .ForMember(dest => dest.OtpCode, opt => opt.Ignore())
+                .ForMember(dest => dest.OtpType, opt => opt.Ignore());
         }
     }
 }
