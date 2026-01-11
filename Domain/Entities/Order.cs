@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Domain.Enums;
 
 namespace Domain.Entities
 {
@@ -25,9 +26,7 @@ namespace Domain.Entities
         [Column(TypeName = "decimal(18,2)")]
         public decimal FinalAmount { get; set; } // Total - Discount + Shipping
 
-        [Required]
-        [MaxLength(50)]
-        public string CurrentStatus { get; set; } = "PENDING";
+        public OrderStatus CurrentStatus { get; set; } = OrderStatus.Pending;
 
         public string? Note { get; set; }
 
