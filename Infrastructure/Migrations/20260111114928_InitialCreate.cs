@@ -22,7 +22,10 @@ namespace Infrastructure.Migrations
                     BranchName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Address = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
                     Phone = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    Region = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
+                    Region = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -36,7 +39,10 @@ namespace Infrastructure.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    ParentId = table.Column<int>(type: "int", nullable: true)
+                    ParentId = table.Column<int>(type: "int", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -50,30 +56,16 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Images",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Url = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    IsMain = table.Column<bool>(type: "bit", nullable: false),
-                    SortOrder = table.Column<int>(type: "int", nullable: false),
-                    OwnerId = table.Column<int>(type: "int", nullable: false),
-                    OwnerType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Images", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Roles",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     RoleName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false)
+                    Description = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -95,7 +87,10 @@ namespace Infrastructure.Migrations
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UsageLimit = table.Column<int>(type: "int", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -113,7 +108,10 @@ namespace Infrastructure.Migrations
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     BasePrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    CategoryId = table.Column<int>(type: "int", nullable: false)
+                    CategoryId = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -137,7 +135,10 @@ namespace Infrastructure.Migrations
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    CategoryId = table.Column<int>(type: "int", nullable: false)
+                    CategoryId = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -163,11 +164,15 @@ namespace Infrastructure.Migrations
                     Phone = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     Address = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    RefreshToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RefreshTokenExpiryTime = table.Column<DateTime>(type: "datetime2", nullable: true),
                     RoleId = table.Column<int>(type: "int", nullable: false),
                     BranchId = table.Column<int>(type: "int", nullable: true),
                     TaxCode = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    CompanyName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true)
+                    CompanyName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -191,7 +196,11 @@ namespace Infrastructure.Migrations
                 {
                     GiftBoxId = table.Column<int>(type: "int", nullable: false),
                     ProductId = table.Column<int>(type: "int", nullable: false),
-                    Quantity = table.Column<int>(type: "int", nullable: false)
+                    Quantity = table.Column<int>(type: "int", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -211,6 +220,38 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Images",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Url = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    IsMain = table.Column<bool>(type: "bit", nullable: false),
+                    SortOrder = table.Column<int>(type: "int", nullable: false),
+                    ProductId = table.Column<int>(type: "int", nullable: true),
+                    GiftBoxId = table.Column<int>(type: "int", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Images", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Images_GiftBoxes_GiftBoxId",
+                        column: x => x.GiftBoxId,
+                        principalTable: "GiftBoxes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Images_Products_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Products",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Inventories",
                 columns: table => new
                 {
@@ -220,7 +261,11 @@ namespace Infrastructure.Migrations
                     ProductId = table.Column<int>(type: "int", nullable: false),
                     Quantity = table.Column<int>(type: "int", nullable: false),
                     MinStockLevel = table.Column<int>(type: "int", nullable: false),
-                    LastUpdated = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    LastUpdated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -255,7 +300,9 @@ namespace Infrastructure.Migrations
                     FinalAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     CurrentStatus = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Note = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -280,6 +327,32 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "UserOtp",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    OtpCode = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
+                    ExpiryTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsUsed = table.Column<bool>(type: "bit", nullable: false),
+                    OtpType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserOtp", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UserOtp_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "InventoryTransactions",
                 columns: table => new
                 {
@@ -290,8 +363,10 @@ namespace Infrastructure.Migrations
                     TransactionType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     ReferenceId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     Note = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true)
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -314,7 +389,10 @@ namespace Infrastructure.Migrations
                     ItemId = table.Column<int>(type: "int", nullable: false),
                     ItemType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Quantity = table.Column<int>(type: "int", nullable: false),
-                    UnitPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false)
+                    UnitPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -346,8 +424,10 @@ namespace Infrastructure.Migrations
                     OrderId = table.Column<int>(type: "int", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Note = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ChangedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ChangedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true)
+                    ChangedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -371,7 +451,9 @@ namespace Infrastructure.Migrations
                     Amount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     TransactionReference = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -394,7 +476,9 @@ namespace Infrastructure.Migrations
                     Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     RawResponse = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Note = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -409,27 +493,27 @@ namespace Infrastructure.Migrations
 
             migrationBuilder.InsertData(
                 table: "Branches",
-                columns: new[] { "Id", "Address", "BranchName", "Phone", "Region" },
-                values: new object[] { 1, "Ho Chi Minh City", "HappyBox HQ", "0909000111", "HCM" });
+                columns: new[] { "Id", "Address", "BranchName", "CreatedAt", "IsDeleted", "Phone", "Region", "UpdatedAt" },
+                values: new object[] { 1, "Ho Chi Minh City", "HappyBox HQ", new DateTime(2026, 1, 11, 11, 49, 27, 861, DateTimeKind.Utc).AddTicks(2376), false, "0909000111", "HCM", null });
 
             migrationBuilder.InsertData(
                 table: "Roles",
-                columns: new[] { "Id", "Description", "RoleName" },
+                columns: new[] { "Id", "CreatedAt", "Description", "IsDeleted", "RoleName", "UpdatedAt" },
                 values: new object[,]
                 {
-                    { 1, "System Administrator", "Admin" },
-                    { 2, "Staff/Employee", "Staff" },
-                    { 3, "Registered Customer", "Customer" },
-                    { 4, "Guest User", "Guest" }
+                    { 1, new DateTime(2026, 1, 11, 11, 49, 27, 861, DateTimeKind.Utc).AddTicks(2105), "System Administrator", false, "Admin", null },
+                    { 2, new DateTime(2026, 1, 11, 11, 49, 27, 861, DateTimeKind.Utc).AddTicks(2111), "Staff/Employee", false, "Staff", null },
+                    { 3, new DateTime(2026, 1, 11, 11, 49, 27, 861, DateTimeKind.Utc).AddTicks(2112), "Registered Customer", false, "Customer", null },
+                    { 4, new DateTime(2026, 1, 11, 11, 49, 27, 861, DateTimeKind.Utc).AddTicks(2113), "Guest User", false, "Guest", null }
                 });
 
             migrationBuilder.InsertData(
                 table: "Users",
-                columns: new[] { "Id", "Address", "BranchId", "CompanyName", "CreatedAt", "Email", "FullName", "IsActive", "PasswordHash", "Phone", "RoleId", "TaxCode", "Username" },
+                columns: new[] { "Id", "Address", "BranchId", "CompanyName", "CreatedAt", "Email", "FullName", "IsActive", "IsDeleted", "PasswordHash", "Phone", "RefreshToken", "RefreshTokenExpiryTime", "RoleId", "TaxCode", "UpdatedAt", "Username" },
                 values: new object[,]
                 {
-                    { 1, "", null, null, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "admin@happybox.vn", "System Admin", true, "123456", "", 1, null, "admin" },
-                    { 2, "", 1, null, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "staff@happybox.vn", "Nguyen Van Staff", true, "123456", "", 2, null, "staff" }
+                    { 1, "", null, null, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "admin@happybox.vn", "System Admin", true, false, "$2a$11$WasrUU/a96Ipw0a83ycIcezFIGFkeOhgw3HjkFVkOPlWyyDcpzGtS", "", null, null, 1, null, null, "admin" },
+                    { 2, "", 1, null, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "staff@happybox.vn", "Nguyen Van Staff", true, false, "$2a$11$vRiKTnIjxYBb5ckzpkC0JuovbeeMRzIU3kLy.h.7NDdgrBZqsaBXu", "", null, null, 2, null, null, "staff" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -446,6 +530,16 @@ namespace Infrastructure.Migrations
                 name: "IX_GiftBoxes_CategoryId",
                 table: "GiftBoxes",
                 column: "CategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Images_GiftBoxId",
+                table: "Images",
+                column: "GiftBoxId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Images_ProductId",
+                table: "Images",
+                column: "ProductId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Inventories_BranchId_ProductId",
@@ -509,6 +603,11 @@ namespace Infrastructure.Migrations
                 column: "CategoryId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_UserOtp_UserId",
+                table: "UserOtp",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Users_BranchId",
                 table: "Users",
                 column: "BranchId");
@@ -539,6 +638,9 @@ namespace Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "PaymentHistories");
+
+            migrationBuilder.DropTable(
+                name: "UserOtp");
 
             migrationBuilder.DropTable(
                 name: "Inventories");

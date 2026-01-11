@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+using Domain.Enums;
+
 namespace Domain.Entities
 {
     // Note: Composite key (BranchId, ProductId) might be good, or just Id
@@ -12,6 +14,8 @@ namespace Domain.Entities
 
         public int Quantity { get; set; }
         public int MinStockLevel { get; set; }
+
+        public InventoryStatus Status { get; set; } = InventoryStatus.InStock;
 
         public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
 
