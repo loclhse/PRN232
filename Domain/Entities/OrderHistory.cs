@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Domain.Enums;
 
 namespace Domain.Entities
 {
@@ -7,9 +8,7 @@ namespace Domain.Entities
     {
         public int OrderId { get; set; }
 
-        [Required]
-        [MaxLength(50)]
-        public string Status { get; set; } = string.Empty;
+        public OrderStatus Status { get; set; }
 
         public string? Note { get; set; }
 
