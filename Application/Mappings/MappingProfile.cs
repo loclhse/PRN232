@@ -2,6 +2,7 @@ using Application.DTOs.Request;
 using Application.DTOs.Response;
 using AutoMapper;
 using Domain.Entities;
+using Domain.Enums;
 
 namespace Application.Mappings
 {
@@ -12,20 +13,12 @@ namespace Application.Mappings
             // User Mapping (DTO <-> Entity)
             CreateMap<RegisterRequest, User>()
                 .ForMember(dest => dest.PasswordHash, opt => opt.Ignore())
-                .ForMember(dest => dest.RoleId, opt => opt.MapFrom(src => 3))
+                .ForMember(dest => dest.RoleId, opt => opt.MapFrom(src => (int)UserRole.Customer))
                 .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => true))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
             
             CreateMap<User, UserResponse>()
                 .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.RoleName));
-
-            // UserOtp Mapping
-            CreateMap<User, UserOtp>()
-                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.ExpiryTime, opt => opt.MapFrom(src => DateTime.UtcNow.AddMinutes(1)))
-                .ForMember(dest => dest.IsUsed, opt => opt.MapFrom(src => false))
-                .ForMember(dest => dest.OtpCode, opt => opt.Ignore())
-                .ForMember(dest => dest.OtpType, opt => opt.Ignore());
         }
     }
 }

@@ -92,7 +92,7 @@ namespace PRN2322.Controllers
 
             var result = await _authService.ForgotPassword(request.Email);
             
-            // Luôn trả về Ok để tránh bị lộ Email có tồn tại trong hệ thống hay không (Security Best Practice)
+           
             return Ok(new { message = "If your email exists in our system, you will receive a reset link." });
         }
 

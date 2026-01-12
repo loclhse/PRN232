@@ -30,9 +30,6 @@ namespace Domain.Entities
 
         public bool IsActive { get; set; } = true;
 
-        public string? RefreshToken { get; set; }
-        public DateTime? RefreshTokenExpiryTime { get; set; }
-
         // Foreign Keys
         public int RoleId { get; set; }
         public int? BranchId { get; set; } // For Staff
@@ -52,6 +49,5 @@ namespace Domain.Entities
         public virtual Branch? Branch { get; set; }
 
         public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
-        public virtual ICollection<UserOtp> UserOtps { get; set; } = new List<UserOtp>();
     }
 }

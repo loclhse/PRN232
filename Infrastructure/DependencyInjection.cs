@@ -24,6 +24,13 @@ namespace Infrastructure
             // Cấu hình Database thông qua Factory
             DbFactory.RegisterContext(services, configuration);
 
+            // Cấu hình Redis Cache
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = configuration.GetConnectionString("Redis");
+                options.InstanceName = "HappyBox_";
+            });
+
             // Đăng ký các Lớp (Repositories, UnitOfWork)
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped<IUnitOfWork, UnitOfWork.UnitOfWork>();

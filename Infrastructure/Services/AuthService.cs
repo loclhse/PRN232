@@ -6,6 +6,7 @@ using Domain.IUnitOfWork;
 using Google.Apis.Auth;
 using Microsoft.Extensions.Configuration;
 using AutoMapper;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Infrastructure.Services
 {
@@ -16,14 +17,16 @@ namespace Infrastructure.Services
         private readonly IConfiguration _configuration;
         private readonly IMailService _mailService;
         private readonly IMapper _mapper;
+        private readonly IDistributedCache _cache;
 
-        public AuthService(IUnitOfWork unitOfWork, ITokenService tokenService, IConfiguration configuration, IMailService mailService, IMapper mapper)
+        public AuthService(IUnitOfWork unitOfWork, ITokenService tokenService, IConfiguration configuration, IMailService mailService, IMapper mapper, IDistributedCache cache)
         {
             _unitOfWork = unitOfWork;
             _tokenService = tokenService;
             _configuration = configuration;
             _mailService = mailService;
             _mapper = mapper;
+            _cache = cache;
         }
 
         public async Task<TokenModel?> LoginWithGoogle(string credential)
@@ -53,10 +56,13 @@ namespace Infrastructure.Services
                 var accessToken = _tokenService.GenerateAccessToken(user);
                 var refreshToken = _tokenService.GenerateRefreshToken();
 
-                user.RefreshToken = refreshToken;
-                user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+                // Lưu Refresh Token vào Redis (Hết hạn sau 7 ngày)
+                var cacheKey = $"refreshToken:{user.Email}";
+                await _cache.SetStringAsync(cacheKey, refreshToken, new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(7)
+                });
 
-                // No need to call userRepository.Update if tracked
                 await _unitOfWork.SaveChangesAsync();
 
                 return new TokenModel
@@ -86,8 +92,12 @@ namespace Infrastructure.Services
             var accessToken = _tokenService.GenerateAccessToken(user);
             var refreshToken = _tokenService.GenerateRefreshToken();
 
-            user.RefreshToken = refreshToken;
-            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+            // Lưu Refresh Token vào Redis
+            var cacheKey = $"refreshToken:{user.Email}";
+            await _cache.SetStringAsync(cacheKey, refreshToken, new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(7)
+            });
 
             await _unitOfWork.SaveChangesAsync();
 
@@ -122,12 +132,12 @@ namespace Infrastructure.Services
             // Tạo mã OTP 6 chữ số
             var otpCode = new Random().Next(100000, 999999).ToString();
             
-            var userOtp = _mapper.Map<UserOtp>(user);
-            userOtp.OtpCode = otpCode;
-            userOtp.OtpType = "ForgotPassword";
-
-            await _unitOfWork.Repository<UserOtp>().AddAsync(userOtp);
-            await _unitOfWork.SaveChangesAsync();
+            // Lưu OTP vào Redis (Hết hạn sau 5 phút)
+            var cacheKey = $"otp:{email}";
+            await _cache.SetStringAsync(cacheKey, otpCode, new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1)
+            });
 
             var subject = "Your OTP Code - HappyBox";
             var body = $@"
@@ -158,17 +168,16 @@ namespace Infrastructure.Services
             var user = await userRepository.GetFirstOrDefaultAsync(u => u.Email == request.Email);
             if (user == null) return false;
 
-            var otpRepo = _unitOfWork.Repository<UserOtp>();
-            var validOtp = await otpRepo.GetFirstOrDefaultAsync(
-                o => o.UserId == user.Id && 
-                     o.OtpCode == request.Otp && 
-                     o.ExpiryTime > DateTime.UtcNow && 
-                     !o.IsUsed);
+            var cacheKey = $"otp:{request.Email}";
+            var savedOtp = await _cache.GetStringAsync(cacheKey);
 
-            if (validOtp == null) return false;
+            if (savedOtp == null || savedOtp != request.Otp)
+            {
+                return false;
+            }
 
-            // Mark OTP as used
-            validOtp.IsUsed = true;
+            // Xóa OTP ngay sau khi dùng xong
+            await _cache.RemoveAsync(cacheKey);
             
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
 
@@ -188,13 +197,21 @@ namespace Infrastructure.Services
                 u => u.Email == email,
                 includeProperties: "Role");
 
-            if (user == null || user.RefreshToken != tokenModel.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+            var cacheKey = $"refreshToken:{email}";
+            var savedRefreshToken = await _cache.GetStringAsync(cacheKey);
+
+            if (user == null || savedRefreshToken != tokenModel.RefreshToken)
                 return null;
 
             var newAccessToken = _tokenService.GenerateAccessToken(user);
             var newRefreshToken = _tokenService.GenerateRefreshToken();
 
-            user.RefreshToken = newRefreshToken;
+            // Cập nhật Refresh Token mới vào Redis
+            await _cache.SetStringAsync(cacheKey, newRefreshToken, new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(7)
+            });
+
             await _unitOfWork.SaveChangesAsync();
 
             return new TokenModel
