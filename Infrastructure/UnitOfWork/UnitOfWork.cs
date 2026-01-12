@@ -11,7 +11,7 @@ namespace Infrastructure.UnitOfWork
     {
         private readonly AppDbContext _context;
         private IDbContextTransaction? _transaction;
-        private Hashtable? _repositories;
+        private readonly Dictionary<Type, object> _repositories = new();
 
         public UnitOfWork(AppDbContext context)
         {
@@ -20,19 +20,15 @@ namespace Infrastructure.UnitOfWork
 
         public IGenericRepository<T> Repository<T>() where T : class
         {
-            if (_repositories == null) _repositories = new Hashtable();
+            var type = typeof(T);
 
-            var type = typeof(T).Name;
-
-            if (!_repositories.ContainsKey(type))
+            if (!_repositories.TryGetValue(type, out var repository))
             {
-                var repositoryType = typeof(GenericRepository<>);
-                var repositoryInstance = Activator.CreateInstance(repositoryType.MakeGenericType(typeof(T)), _context);
-
-                _repositories.Add(type, repositoryInstance);
+                repository = new GenericRepository<T>(_context);
+                _repositories[type] = repository;
             }
 
-            return (IGenericRepository<T>)_repositories[type]!;
+            return (IGenericRepository<T>)repository;
         }
 
         public async Task<int> SaveChangesAsync()
@@ -49,8 +45,12 @@ namespace Infrastructure.UnitOfWork
         {
             try
             {
+                // Note: We keep SaveChangesAsync here to ensure data is persisted before commit, 
+                // but developers must be careful not to call uow.SaveChangesAsync() right before this.
                 await _context.SaveChangesAsync();
-                if (_transaction != null) await _transaction.CommitAsync();
+                
+                if (_transaction != null) 
+                    await _transaction.CommitAsync();
             }
             catch
             {
@@ -61,7 +61,7 @@ namespace Infrastructure.UnitOfWork
             {
                 if (_transaction != null)
                 {
-                    _transaction.Dispose();
+                    await _transaction.DisposeAsync();
                     _transaction = null;
                 }
             }
@@ -72,14 +72,17 @@ namespace Infrastructure.UnitOfWork
             if (_transaction != null)
             {
                 await _transaction.RollbackAsync();
-                _transaction.Dispose();
+                await _transaction.DisposeAsync();
                 _transaction = null;
             }
         }
 
         public void Dispose()
         {
-            _context.Dispose();
+            // Do NOT dispose _context manually here if it's managed by DI (Scoped).
+            // Only dispose the transaction if it exists.
+            _transaction?.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 }
