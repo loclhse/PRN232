@@ -10,7 +10,7 @@ namespace Domain.Entities
         [MaxLength(100)]
         public string Name { get; set; } = string.Empty;
 
-        public int? ParentId { get; set; }
+        public Guid? ParentId { get; set; }
 
         [ForeignKey("ParentId")]
         public virtual Category? ParentCategory { get; set; }

@@ -5,7 +5,7 @@ namespace Domain.Entities
 {
     public class InventoryTransaction : BaseEntity
     {
-        public int InventoryId { get; set; }
+        public Guid InventoryId { get; set; }
 
         public int QuantityChange { get; set; } // + or -
 

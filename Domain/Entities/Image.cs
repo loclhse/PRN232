@@ -13,9 +13,9 @@ namespace Domain.Entities
         public bool IsMain { get; set; }
         public int SortOrder { get; set; }
 
-        public int? ProductId { get; set; }
+        public Guid? ProductId { get; set; }
         public Product? Product { get; set; }
-        public int? GiftBoxId { get; set; }
+        public Guid? GiftBoxId { get; set; }
         public GiftBox? GiftBox { get; set; }
     }
 }

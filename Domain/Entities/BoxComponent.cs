@@ -6,8 +6,8 @@ namespace Domain.Entities
     // Note: Composite Key (GiftBoxId, ProductId) needs configuration in DbContext (Fluent API)
     public class BoxComponent : BaseEntity
     {
-        public int GiftBoxId { get; set; }
-        public int ProductId { get; set; }
+        public Guid GiftBoxId { get; set; }
+        public Guid ProductId { get; set; }
 
         public int Quantity { get; set; }
 

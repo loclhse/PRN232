@@ -10,9 +10,9 @@ namespace Domain.Entities
         [MaxLength(50)]
         public string OrderNumber { get; set; } = string.Empty;
 
-        public int UserId { get; set; }
-        public int BranchId { get; set; }
-        public int? VoucherId { get; set; }
+        public Guid UserId { get; set; }
+        public Guid BranchId { get; set; }
+        public Guid? VoucherId { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal TotalAmount { get; set; } // Sum of items

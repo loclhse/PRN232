@@ -9,8 +9,8 @@ namespace Domain.Entities
     public class Inventory : BaseEntity
     {
 
-        public int BranchId { get; set; }
-        public int ProductId { get; set; }
+        public Guid BranchId { get; set; }
+        public Guid ProductId { get; set; }
 
         public int Quantity { get; set; }
         public int MinStockLevel { get; set; }

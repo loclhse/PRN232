@@ -8,6 +8,14 @@ namespace Infrastructure.Configurations
         public static void Configure(ModelBuilder modelBuilder)
         {
             // =========================================================
+            // IDENTITY
+            // =========================================================
+            modelBuilder.Entity<Role>()
+                .Property(r => r.RoleName)
+                .HasConversion<string>()
+                .HasMaxLength(50);
+
+            // =========================================================
             // CORE PRODUCTS
             // =========================================================
 

@@ -6,9 +6,9 @@ namespace Domain.Entities
     public class OrderDetail : BaseEntity
     {
 
-        public int OrderId { get; set; }
+        public Guid OrderId { get; set; }
 
-        public int ItemId { get; set; } // ProductId or GiftBoxId depending on ItemType
+        public Guid ItemId { get; set; } // ProductId or GiftBoxId depending on ItemType
         
         [Required]
         [MaxLength(50)]
