@@ -5,7 +5,7 @@ namespace Domain.Entities
 {
     public class PaymentHistory : BaseEntity
     {
-        public int PaymentId { get; set; }
+        public Guid PaymentId { get; set; }
 
         [Required]
         [MaxLength(50)]

@@ -31,8 +31,8 @@ namespace Domain.Entities
         public bool IsActive { get; set; } = true;
 
         // Foreign Keys
-        public int RoleId { get; set; }
-        public int? BranchId { get; set; } // For Staff
+        public Guid RoleId { get; set; }
+        public Guid? BranchId { get; set; } // For Staff
 
         // B2B Info
         [MaxLength(50)]

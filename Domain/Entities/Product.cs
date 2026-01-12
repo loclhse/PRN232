@@ -21,7 +21,7 @@ namespace Domain.Entities
 
         public bool IsActive { get; set; } = true;
 
-        public int CategoryId { get; set; }
+        public Guid CategoryId { get; set; }
 
         [ForeignKey("CategoryId")]
         public virtual Category Category { get; set; } = null!;

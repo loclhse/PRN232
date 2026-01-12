@@ -6,7 +6,7 @@ namespace Domain.Entities
 {
     public class OrderHistory : BaseEntity
     {
-        public int OrderId { get; set; }
+        public Guid OrderId { get; set; }
 
         public OrderStatus Status { get; set; }
 
