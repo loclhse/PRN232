@@ -1,4 +1,5 @@
 using Domain.Entities;
+using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Seeder
@@ -9,10 +10,10 @@ namespace Infrastructure.Seeder
         {
             // Seed Data (Roles)
             modelBuilder.Entity<Role>().HasData(
-                new Role { Id = 1, RoleName = "Admin", Description = "System Administrator" },
-                new Role { Id = 2, RoleName = "Staff", Description = "Staff/Employee" },
-                new Role { Id = 3, RoleName = "Customer", Description = "Registered Customer" },
-                new Role { Id = 4, RoleName = "Guest", Description = "Guest User" }
+                new Role { Id = (int)UserRole.Admin, RoleName = "Admin", Description = "System Administrator" },
+                new Role { Id = (int)UserRole.Staff, RoleName = "Staff", Description = "Staff/Employee" },
+                new Role { Id = (int)UserRole.Customer, RoleName = "Customer", Description = "Registered Customer" },
+                new Role { Id = (int)UserRole.Guest, RoleName = "Guest", Description = "Guest User" }
             );
 
             // Seed Data (Branch) - Để Staff có chỗ làm việc
@@ -29,7 +30,7 @@ namespace Infrastructure.Seeder
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
                     FullName = "System Admin", 
                     Email = "admin@happybox.vn", 
-                    RoleId = 1, // Admin
+                    RoleId = (int)UserRole.Admin, // Admin
                     IsActive = true,
                     CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 },
@@ -40,7 +41,7 @@ namespace Infrastructure.Seeder
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
                     FullName = "Nguyen Van Staff", 
                     Email = "staff@happybox.vn", 
-                    RoleId = 2, // Staff
+                    RoleId = (int)UserRole.Staff, // Staff
                     BranchId = 1, // HappyBox HQ
                     IsActive = true,
                     CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
