@@ -13,9 +13,14 @@ namespace Infrastructure.UnitOfWork
         private IDbContextTransaction? _transaction;
         private readonly Dictionary<Type, object> _repositories = new();
 
+        public IProductRepository productRepository { get; }
+        public ICategoryRepository categoryRepository { get; }
+
         public UnitOfWork(AppDbContext context)
         {
             _context = context;
+            productRepository = new ProductRepository(_context);
+            categoryRepository = new CategoryRepository(_context);
         }
 
         public IGenericRepository<T> Repository<T>() where T : class

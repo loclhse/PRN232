@@ -97,7 +97,7 @@ namespace Infrastructure.Migrations
                             Id = new Guid("7c8d9e0f-1a2b-3c4d-5e6f-7a8b9c0d1e2f"),
                             Address = "Ho Chi Minh City",
                             BranchName = "HappyBox HQ",
-                            CreatedAt = new DateTime(2026, 1, 12, 12, 49, 35, 760, DateTimeKind.Utc).AddTicks(4749),
+                            CreatedAt = new DateTime(2026, 1, 19, 5, 21, 25, 642, DateTimeKind.Utc).AddTicks(7626),
                             IsDeleted = false,
                             Phone = "0909000111",
                             Region = "HCM"
@@ -603,7 +603,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("d4b8e7a0-0b6b-4e6a-9a0b-9c8d7e6f5a4b"),
-                            CreatedAt = new DateTime(2026, 1, 12, 12, 49, 35, 760, DateTimeKind.Utc).AddTicks(4586),
+                            CreatedAt = new DateTime(2026, 1, 19, 5, 21, 25, 642, DateTimeKind.Utc).AddTicks(7488),
                             Description = "System Administrator",
                             IsDeleted = false,
                             RoleName = "Admin"
@@ -611,7 +611,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("c5a7d6e8-2f1b-4d3c-9b0a-8c7d6e5f4a3b"),
-                            CreatedAt = new DateTime(2026, 1, 12, 12, 49, 35, 760, DateTimeKind.Utc).AddTicks(4590),
+                            CreatedAt = new DateTime(2026, 1, 19, 5, 21, 25, 642, DateTimeKind.Utc).AddTicks(7493),
                             Description = "Staff/Employee",
                             IsDeleted = false,
                             RoleName = "Staff"
@@ -619,7 +619,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("b6a5d4e3-1c2b-4a3d-9e0f-7b6a5c4d3e2f"),
-                            CreatedAt = new DateTime(2026, 1, 12, 12, 49, 35, 760, DateTimeKind.Utc).AddTicks(4592),
+                            CreatedAt = new DateTime(2026, 1, 19, 5, 21, 25, 642, DateTimeKind.Utc).AddTicks(7495),
                             Description = "Registered Customer",
                             IsDeleted = false,
                             RoleName = "Customer"
@@ -627,7 +627,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4a3b-8c9d-0e1f2a3b4c5d"),
-                            CreatedAt = new DateTime(2026, 1, 12, 12, 49, 35, 760, DateTimeKind.Utc).AddTicks(4593),
+                            CreatedAt = new DateTime(2026, 1, 19, 5, 21, 25, 642, DateTimeKind.Utc).AddTicks(7497),
                             Description = "Guest User",
                             IsDeleted = false,
                             RoleName = "Guest"
@@ -714,7 +714,7 @@ namespace Infrastructure.Migrations
                             FullName = "System Admin",
                             IsActive = true,
                             IsDeleted = false,
-                            PasswordHash = "$2a$11$8ujYInRg5V3Cr32kPT61QeuOduILqJolwbNHId.RmzYL3o7/pYxfW",
+                            PasswordHash = "$2a$11$hiS5IXbXulOf1B0IeTTCg.bKauLZne/ioXhBlWDx0gKY.vhWjI7m.",
                             Phone = "",
                             RoleId = new Guid("d4b8e7a0-0b6b-4e6a-9a0b-9c8d7e6f5a4b"),
                             Username = "admin"
@@ -729,7 +729,7 @@ namespace Infrastructure.Migrations
                             FullName = "Nguyen Van Staff",
                             IsActive = true,
                             IsDeleted = false,
-                            PasswordHash = "$2a$11$rqmGJ1fxzx61I8/UWiPiieIVVF16AmWR5zORk7ohQwbMvI7MbrRSS",
+                            PasswordHash = "$2a$11$Zcg14OqNl73FRR7/YFqeTuCSsq9iD1OcdkubnTPCOA1Cg5SgDHhBK",
                             Phone = "",
                             RoleId = new Guid("c5a7d6e8-2f1b-4d3c-9b0a-8c7d6e5f4a3b"),
                             Username = "staff"
