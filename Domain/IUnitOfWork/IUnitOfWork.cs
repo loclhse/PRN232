@@ -5,7 +5,8 @@ namespace Domain.IUnitOfWork
     public interface IUnitOfWork : IDisposable
     {
         // Add specific repositories here as needed
-        
+        IProductRepository productRepository { get; }
+        ICategoryRepository categoryRepository { get; }
         
         IGenericRepository<T> Repository<T>() where T : class;
         
