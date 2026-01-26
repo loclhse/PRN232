@@ -41,6 +41,8 @@ namespace Infrastructure
             services.AddScoped<IMailService, MailService>();
             services.AddScoped<IProductService, ProductService>();
             services.AddScoped<ICategoryService, CategoryService>();
+            // Thêm dòng này vào chỗ đăng ký các Service khác
+            services.AddScoped<IImageService, ImageService>();
 
             // AutoMapper
             services.AddAutoMapper(cfg => 

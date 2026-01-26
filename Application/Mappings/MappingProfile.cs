@@ -69,6 +69,10 @@ namespace Application.Mappings
 
             CreateMap<Category, CategoryResponse>()
                 .ForMember(dest => dest.ParentName, opt => opt.MapFrom(src => src.ParentCategory != null ? src.ParentCategory.Name : null));
+
+            // Image Mapping (DTO <-> Entity)
+            CreateMap<CreateImageRequest, Image>();
+            CreateMap<Image, ImageResponse>();
         }
     }
 }
