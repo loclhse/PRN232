@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class i : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -451,17 +451,17 @@ namespace Infrastructure.Migrations
             migrationBuilder.InsertData(
                 table: "Branches",
                 columns: new[] { "Id", "Address", "BranchName", "CreatedAt", "IsDeleted", "Phone", "Region", "UpdatedAt" },
-                values: new object[] { new Guid("7c8d9e0f-1a2b-3c4d-5e6f-7a8b9c0d1e2f"), "Ho Chi Minh City", "HappyBox HQ", new DateTime(2026, 1, 19, 5, 21, 25, 642, DateTimeKind.Utc).AddTicks(7626), false, "0909000111", "HCM", null });
+                values: new object[] { new Guid("7c8d9e0f-1a2b-3c4d-5e6f-7a8b9c0d1e2f"), "Ho Chi Minh City", "HappyBox HQ", new DateTime(2026, 1, 26, 12, 25, 35, 360, DateTimeKind.Utc).AddTicks(9559), false, "0909000111", "HCM", null });
 
             migrationBuilder.InsertData(
                 table: "Roles",
                 columns: new[] { "Id", "CreatedAt", "Description", "IsDeleted", "RoleName", "UpdatedAt" },
                 values: new object[,]
                 {
-                    { new Guid("a1b2c3d4-e5f6-4a3b-8c9d-0e1f2a3b4c5d"), new DateTime(2026, 1, 19, 5, 21, 25, 642, DateTimeKind.Utc).AddTicks(7497), "Guest User", false, "Guest", null },
-                    { new Guid("b6a5d4e3-1c2b-4a3d-9e0f-7b6a5c4d3e2f"), new DateTime(2026, 1, 19, 5, 21, 25, 642, DateTimeKind.Utc).AddTicks(7495), "Registered Customer", false, "Customer", null },
-                    { new Guid("c5a7d6e8-2f1b-4d3c-9b0a-8c7d6e5f4a3b"), new DateTime(2026, 1, 19, 5, 21, 25, 642, DateTimeKind.Utc).AddTicks(7493), "Staff/Employee", false, "Staff", null },
-                    { new Guid("d4b8e7a0-0b6b-4e6a-9a0b-9c8d7e6f5a4b"), new DateTime(2026, 1, 19, 5, 21, 25, 642, DateTimeKind.Utc).AddTicks(7488), "System Administrator", false, "Admin", null }
+                    { new Guid("a1b2c3d4-e5f6-4a3b-8c9d-0e1f2a3b4c5d"), new DateTime(2026, 1, 26, 12, 25, 35, 360, DateTimeKind.Utc).AddTicks(9398), "Guest User", false, "Guest", null },
+                    { new Guid("b6a5d4e3-1c2b-4a3d-9e0f-7b6a5c4d3e2f"), new DateTime(2026, 1, 26, 12, 25, 35, 360, DateTimeKind.Utc).AddTicks(9397), "Registered Customer", false, "Customer", null },
+                    { new Guid("c5a7d6e8-2f1b-4d3c-9b0a-8c7d6e5f4a3b"), new DateTime(2026, 1, 26, 12, 25, 35, 360, DateTimeKind.Utc).AddTicks(9395), "Staff/Employee", false, "Staff", null },
+                    { new Guid("d4b8e7a0-0b6b-4e6a-9a0b-9c8d7e6f5a4b"), new DateTime(2026, 1, 26, 12, 25, 35, 360, DateTimeKind.Utc).AddTicks(9391), "System Administrator", false, "Admin", null }
                 });
 
             migrationBuilder.InsertData(
@@ -469,8 +469,8 @@ namespace Infrastructure.Migrations
                 columns: new[] { "Id", "Address", "BranchId", "CompanyName", "CreatedAt", "Email", "FullName", "IsActive", "IsDeleted", "PasswordHash", "Phone", "RoleId", "TaxCode", "UpdatedAt", "Username" },
                 values: new object[,]
                 {
-                    { new Guid("e9d8c7b6-a5b4-4c3d-2e1f-0a1b2c3d4e5f"), "", new Guid("7c8d9e0f-1a2b-3c4d-5e6f-7a8b9c0d1e2f"), null, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "staff@happybox.vn", "Nguyen Van Staff", true, false, "$2a$11$Zcg14OqNl73FRR7/YFqeTuCSsq9iD1OcdkubnTPCOA1Cg5SgDHhBK", "", new Guid("c5a7d6e8-2f1b-4d3c-9b0a-8c7d6e5f4a3b"), null, null, "staff" },
-                    { new Guid("f0a1b2c3-d4e5-4f6a-8b9c-0d1e2f3a4b5c"), "", null, null, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "admin@happybox.vn", "System Admin", true, false, "$2a$11$hiS5IXbXulOf1B0IeTTCg.bKauLZne/ioXhBlWDx0gKY.vhWjI7m.", "", new Guid("d4b8e7a0-0b6b-4e6a-9a0b-9c8d7e6f5a4b"), null, null, "admin" }
+                    { new Guid("e9d8c7b6-a5b4-4c3d-2e1f-0a1b2c3d4e5f"), "", new Guid("7c8d9e0f-1a2b-3c4d-5e6f-7a8b9c0d1e2f"), null, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "staff@happybox.vn", "Nguyen Van Staff", true, false, "$2a$11$bwArUdmGdp0IierqUs0Nu.nRZZMuvNWCa95sW2/qkIUi675iG6/uq", "", new Guid("c5a7d6e8-2f1b-4d3c-9b0a-8c7d6e5f4a3b"), null, null, "staff" },
+                    { new Guid("f0a1b2c3-d4e5-4f6a-8b9c-0d1e2f3a4b5c"), "", null, null, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "admin@happybox.vn", "System Admin", true, false, "$2a$11$tI.kXa.PJnERu1UOlrWwfOmzG9J4wBQgCGdHBFUXC6hAhQEGBuUnK", "", new Guid("d4b8e7a0-0b6b-4e6a-9a0b-9c8d7e6f5a4b"), null, null, "admin" }
                 });
 
             migrationBuilder.CreateIndex(

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260119052126_init")]
-    partial class init
+    [Migration("20260126122538_i")]
+    partial class i
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -100,7 +100,7 @@ namespace Infrastructure.Migrations
                             Id = new Guid("7c8d9e0f-1a2b-3c4d-5e6f-7a8b9c0d1e2f"),
                             Address = "Ho Chi Minh City",
                             BranchName = "HappyBox HQ",
-                            CreatedAt = new DateTime(2026, 1, 19, 5, 21, 25, 642, DateTimeKind.Utc).AddTicks(7626),
+                            CreatedAt = new DateTime(2026, 1, 26, 12, 25, 35, 360, DateTimeKind.Utc).AddTicks(9559),
                             IsDeleted = false,
                             Phone = "0909000111",
                             Region = "HCM"
@@ -606,7 +606,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("d4b8e7a0-0b6b-4e6a-9a0b-9c8d7e6f5a4b"),
-                            CreatedAt = new DateTime(2026, 1, 19, 5, 21, 25, 642, DateTimeKind.Utc).AddTicks(7488),
+                            CreatedAt = new DateTime(2026, 1, 26, 12, 25, 35, 360, DateTimeKind.Utc).AddTicks(9391),
                             Description = "System Administrator",
                             IsDeleted = false,
                             RoleName = "Admin"
@@ -614,7 +614,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("c5a7d6e8-2f1b-4d3c-9b0a-8c7d6e5f4a3b"),
-                            CreatedAt = new DateTime(2026, 1, 19, 5, 21, 25, 642, DateTimeKind.Utc).AddTicks(7493),
+                            CreatedAt = new DateTime(2026, 1, 26, 12, 25, 35, 360, DateTimeKind.Utc).AddTicks(9395),
                             Description = "Staff/Employee",
                             IsDeleted = false,
                             RoleName = "Staff"
@@ -622,7 +622,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("b6a5d4e3-1c2b-4a3d-9e0f-7b6a5c4d3e2f"),
-                            CreatedAt = new DateTime(2026, 1, 19, 5, 21, 25, 642, DateTimeKind.Utc).AddTicks(7495),
+                            CreatedAt = new DateTime(2026, 1, 26, 12, 25, 35, 360, DateTimeKind.Utc).AddTicks(9397),
                             Description = "Registered Customer",
                             IsDeleted = false,
                             RoleName = "Customer"
@@ -630,7 +630,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4a3b-8c9d-0e1f2a3b4c5d"),
-                            CreatedAt = new DateTime(2026, 1, 19, 5, 21, 25, 642, DateTimeKind.Utc).AddTicks(7497),
+                            CreatedAt = new DateTime(2026, 1, 26, 12, 25, 35, 360, DateTimeKind.Utc).AddTicks(9398),
                             Description = "Guest User",
                             IsDeleted = false,
                             RoleName = "Guest"
@@ -717,7 +717,7 @@ namespace Infrastructure.Migrations
                             FullName = "System Admin",
                             IsActive = true,
                             IsDeleted = false,
-                            PasswordHash = "$2a$11$hiS5IXbXulOf1B0IeTTCg.bKauLZne/ioXhBlWDx0gKY.vhWjI7m.",
+                            PasswordHash = "$2a$11$tI.kXa.PJnERu1UOlrWwfOmzG9J4wBQgCGdHBFUXC6hAhQEGBuUnK",
                             Phone = "",
                             RoleId = new Guid("d4b8e7a0-0b6b-4e6a-9a0b-9c8d7e6f5a4b"),
                             Username = "admin"
@@ -732,7 +732,7 @@ namespace Infrastructure.Migrations
                             FullName = "Nguyen Van Staff",
                             IsActive = true,
                             IsDeleted = false,
-                            PasswordHash = "$2a$11$Zcg14OqNl73FRR7/YFqeTuCSsq9iD1OcdkubnTPCOA1Cg5SgDHhBK",
+                            PasswordHash = "$2a$11$bwArUdmGdp0IierqUs0Nu.nRZZMuvNWCa95sW2/qkIUi675iG6/uq",
                             Phone = "",
                             RoleId = new Guid("c5a7d6e8-2f1b-4d3c-9b0a-8c7d6e5f4a3b"),
                             Username = "staff"
