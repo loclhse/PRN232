@@ -37,6 +37,24 @@ namespace PRN2322.Controllers
             return Ok(result);
         }
 
+        [HttpPost("facebook-login")]
+        public async Task<IActionResult> FacebookLogin([FromBody] FacebookLoginRequest request)
+        {
+            if (string.IsNullOrEmpty(request.AccessToken))
+            {
+                return BadRequest("AccessToken is required.");
+            }
+
+            var result = await _authService.LoginWithFacebook(request.AccessToken);
+
+            if (result == null)
+            {
+                return Unauthorized("Invalid Facebook token.");
+            }
+
+            return Ok(result);
+        }
+
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {

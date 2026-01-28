@@ -17,6 +17,5 @@ namespace Domain.Entities
         public virtual ICollection<Category> SubCategories { get; set; } = new List<Category>();
 
         public virtual ICollection<Product> Products { get; set; } = new List<Product>();
-        public virtual ICollection<GiftBox> GiftBoxes { get; set; } = new List<GiftBox>();
     }
 }

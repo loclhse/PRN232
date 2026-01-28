@@ -24,6 +24,8 @@ namespace Infrastructure
             // Cấu hình Database thông qua Factory
             DbFactory.RegisterContext(services, configuration);
 
+            services.AddHttpClient();
+
             // Cấu hình Redis Cache
             services.AddStackExchangeRedisCache(options =>
             {
@@ -35,6 +37,7 @@ namespace Infrastructure
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped<IUnitOfWork, UnitOfWork.UnitOfWork>();
             
+            services.AddScoped<IAIService, AIService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IMailService, MailService>();

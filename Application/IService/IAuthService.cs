@@ -7,6 +7,7 @@ namespace Application.IService
     public interface IAuthService
     {
         Task<TokenModel?> LoginWithGoogle(string credential);
+        Task<TokenModel?> LoginWithFacebook(string accessToken);
         Task<TokenModel?> Login(LoginRequest request);
         Task<bool> Register(RegisterRequest request);
         Task<bool> ForgotPassword(string email);
