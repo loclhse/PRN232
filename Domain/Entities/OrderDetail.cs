@@ -8,12 +8,8 @@ namespace Domain.Entities
 
         public Guid OrderId { get; set; }
 
-        public Guid ItemId { get; set; } // ProductId or GiftBoxId depending on ItemType
+        public Guid ProductId { get; set; }
         
-        [Required]
-        [MaxLength(50)]
-        public string ItemType { get; set; } = "PRODUCT"; // PRODUCT or GIFTBOX
-
         public int Quantity { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
@@ -22,12 +18,7 @@ namespace Domain.Entities
         [ForeignKey("OrderId")]
         public virtual Order Order { get; set; } = null!;
         
-        // Optional navigation properties - might be tricky with single ItemId column
-        // But useful to have mapped slightly differently or just logical references
-        [ForeignKey("ItemId")]
-        public virtual Product? Product { get; set; } // Only if ItemType == PRODUCT
-
-        [ForeignKey("ItemId")]
-        public virtual GiftBox? GiftBox { get; set; } // Only if ItemType == GIFTBOX
+        [ForeignKey("ProductId")]
+        public virtual Product Product { get; set; } = null!;
     }
 }

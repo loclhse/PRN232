@@ -13,14 +13,56 @@ namespace Infrastructure.UnitOfWork
         private IDbContextTransaction? _transaction;
         private readonly Dictionary<Type, object> _repositories = new();
 
-        public IProductRepository productRepository { get; }
-        public ICategoryRepository categoryRepository { get; }
-
         public UnitOfWork(AppDbContext context)
         {
             _context = context;
             productRepository = new ProductRepository(_context);
             categoryRepository = new CategoryRepository(_context);
+        }
+
+        public IUserRepository UserRepository
+        {
+            get
+            {
+                _userRepository ??= new UserRepository(_context);
+                return _userRepository;
+            }
+        }
+
+        public IProductRepository ProductRepository
+        {
+            get
+            {
+                _productRepository ??= new ProductRepository(_context);
+                return _productRepository;
+            }
+        }
+
+        public ICategoryRepository CategoryRepository
+        {
+            get
+            {
+                _categoryRepository ??= new CategoryRepository(_context);
+                return _categoryRepository;
+            }
+        }
+
+        public IOrderRepository OrderRepository
+        {
+            get
+            {
+                _orderRepository ??= new OrderRepository(_context);
+                return _orderRepository;
+            }
+        }
+
+        public IRoleRepository RoleRepository
+        {
+            get
+            {
+                _roleRepository ??= new RoleRepository(_context);
+                return _roleRepository;
+            }
         }
 
         public IGenericRepository<T> Repository<T>() where T : class

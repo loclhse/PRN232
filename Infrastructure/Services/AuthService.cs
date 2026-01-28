@@ -18,8 +18,9 @@ namespace Infrastructure.Services
         private readonly IMailService _mailService;
         private readonly IMapper _mapper;
         private readonly IDistributedCache _cache;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public AuthService(IUnitOfWork unitOfWork, ITokenService tokenService, IConfiguration configuration, IMailService mailService, IMapper mapper, IDistributedCache cache)
+        public AuthService(IUnitOfWork unitOfWork, ITokenService tokenService, IConfiguration configuration, IMailService mailService, IMapper mapper, IDistributedCache cache, IHttpClientFactory httpClientFactory)
         {
             _unitOfWork = unitOfWork;
             _tokenService = tokenService;
@@ -27,6 +28,7 @@ namespace Infrastructure.Services
             _mailService = mailService;
             _mapper = mapper;
             _cache = cache;
+            _httpClientFactory = httpClientFactory;
         }
 
         public async Task<TokenModel?> LoginWithGoogle(string credential)
@@ -41,8 +43,7 @@ namespace Infrastructure.Services
 
                 var payload = await GoogleJsonWebSignature.ValidateAsync(credential, settings);
 
-                var userRepository = _unitOfWork.Repository<User>();
-                var user = await userRepository.GetFirstOrDefaultAsync(
+                var user = await _unitOfWork.UserRepository.GetFirstOrDefaultAsync(
                     u => u.Email == payload.Email,
                     includeProperties: "Role");
 
@@ -50,7 +51,7 @@ namespace Infrastructure.Services
                 {
                     // Create new user if not exists
                     user = _mapper.Map<User>(payload);
-                    await userRepository.AddAsync(user);
+                    await _unitOfWork.UserRepository.AddAsync(user);
                 }
 
                 var accessToken = _tokenService.GenerateAccessToken(user);
@@ -77,10 +78,68 @@ namespace Infrastructure.Services
             }
         }
 
+        public async Task<TokenModel?> LoginWithFacebook(string accessToken)
+        {
+            try
+            {
+                var client = _httpClientFactory.CreateClient();
+                var response = await client.GetAsync($"https://graph.facebook.com/me?fields=id,name,email,picture&access_token={accessToken}");
+
+                if (!response.IsSuccessStatusCode) return null;
+
+                var content = await response.Content.ReadAsStringAsync();
+                var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var facebookUser = System.Text.Json.JsonSerializer.Deserialize<Application.DTOs.Request.FacebookUserInfo>(content, options);
+
+                if (facebookUser == null || string.IsNullOrEmpty(facebookUser.Email)) return null;
+
+                var user = await _unitOfWork.UserRepository.GetFirstOrDefaultAsync(
+                    u => u.Email == facebookUser.Email,
+                    includeProperties: "Role");
+
+                if (user == null)
+                {
+                    // Create new user if not exists
+                    user = new User
+                    {
+                        Id = Guid.NewGuid(),
+                        Email = facebookUser.Email,
+                        FullName = facebookUser.Name,
+                        Username = facebookUser.Email,
+                        RoleId = Domain.Constants.RoleIds.Customer,
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow,
+                        PasswordHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString())
+                    };
+                    await _unitOfWork.UserRepository.AddAsync(user);
+                }
+
+                var newAccessToken = _tokenService.GenerateAccessToken(user);
+                var newRefreshToken = _tokenService.GenerateRefreshToken();
+
+                var cacheKey = $"refreshToken:{user.Email}";
+                await _cache.SetStringAsync(cacheKey, newRefreshToken, new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(7)
+                });
+
+                await _unitOfWork.SaveChangesAsync();
+
+                return new TokenModel
+                {
+                    AccessToken = newAccessToken,
+                    RefreshToken = newRefreshToken
+                };
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
         public async Task<TokenModel?> Login(LoginRequest request)
         {
-            var userRepository = _unitOfWork.Repository<User>();
-            var user = await userRepository.GetFirstOrDefaultAsync(
+            var user = await _unitOfWork.UserRepository.GetFirstOrDefaultAsync(
                 u => u.Email == request.Email,
                 includeProperties: "Role");
 
@@ -110,23 +169,20 @@ namespace Infrastructure.Services
 
         public async Task<bool> Register(RegisterRequest request)
         {
-            var userRepository = _unitOfWork.Repository<User>();
-            
             // Check if user already exists
-            var existingUser = await userRepository.GetFirstOrDefaultAsync(u => u.Username == request.Username || u.Email == request.Email);
+            var existingUser = await _unitOfWork.UserRepository.GetFirstOrDefaultAsync(u => u.Username == request.Username || u.Email == request.Email);
             if (existingUser != null) return false;
 
             var user = _mapper.Map<User>(request);
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
-            await userRepository.AddAsync(user);
+            await _unitOfWork.UserRepository.AddAsync(user);
             return await _unitOfWork.SaveChangesAsync() > 0;
         }
 
         public async Task<bool> ForgotPassword(string email)
         {
-            var userRepository = _unitOfWork.Repository<User>();
-            var user = await userRepository.GetFirstOrDefaultAsync(u => u.Email == email);
+            var user = await _unitOfWork.UserRepository.GetFirstOrDefaultAsync(u => u.Email == email);
             if (user == null) return false;
 
             // Tạo mã OTP 6 chữ số
@@ -164,8 +220,7 @@ namespace Infrastructure.Services
 
         public async Task<bool> ResetPassword(ResetPasswordWithOtpRequest request)
         {
-            var userRepository = _unitOfWork.Repository<User>();
-            var user = await userRepository.GetFirstOrDefaultAsync(u => u.Email == request.Email);
+            var user = await _unitOfWork.UserRepository.GetFirstOrDefaultAsync(u => u.Email == request.Email);
             if (user == null) return false;
 
             var cacheKey = $"otp:{request.Email}";
@@ -192,8 +247,7 @@ namespace Infrastructure.Services
             var email = principal.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Email)?.Value;
             if (string.IsNullOrEmpty(email)) return null;
 
-            var userRepository = _unitOfWork.Repository<User>();
-            var user = await userRepository.GetFirstOrDefaultAsync(
+            var user = await _unitOfWork.UserRepository.GetFirstOrDefaultAsync(
                 u => u.Email == email,
                 includeProperties: "Role");
 
@@ -223,8 +277,7 @@ namespace Infrastructure.Services
 
         public async Task<UserResponse?> GetProfile(string email)
         {
-            var userRepository = _unitOfWork.Repository<User>();
-            var user = await userRepository.GetFirstOrDefaultAsync(
+            var user = await _unitOfWork.UserRepository.GetFirstOrDefaultAsync(
                 u => u.Email == email,
                 includeProperties: "Role");
 

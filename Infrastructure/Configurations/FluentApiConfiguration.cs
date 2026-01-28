@@ -19,21 +19,6 @@ namespace Infrastructure.Configurations
             // CORE PRODUCTS
             // =========================================================
 
-            // BoxComponent Composite Key (Many-to-Many between GiftBox and Product)
-            modelBuilder.Entity<BoxComponent>()
-                .HasKey(bc => new { bc.GiftBoxId, bc.ProductId });
-
-            modelBuilder.Entity<BoxComponent>()
-                .HasOne(bc => bc.GiftBox)
-                .WithMany(gb => gb.BoxComponents)
-                .HasForeignKey(bc => bc.GiftBoxId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<BoxComponent>()
-                .HasOne(bc => bc.Product)
-                .WithMany(p => p.BoxComponents)
-                .HasForeignKey(bc => bc.ProductId)
-                .OnDelete(DeleteBehavior.Restrict);
 
             // Image - Product (nullable)
             modelBuilder.Entity<Image>()
@@ -42,12 +27,6 @@ namespace Infrastructure.Configurations
                 .HasForeignKey(i => i.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Image - GiftBox (nullable)
-            modelBuilder.Entity<Image>()
-                .HasOne(i => i.GiftBox)
-                .WithMany(gb => gb.Images)
-                .HasForeignKey(i => i.GiftBoxId)
-                .OnDelete(DeleteBehavior.Restrict);
 
             // Category Self-Referencing
             modelBuilder.Entity<Category>()
@@ -96,13 +75,7 @@ namespace Infrastructure.Configurations
             modelBuilder.Entity<OrderDetail>()
                 .HasOne(od => od.Product)
                 .WithMany(p => p.OrderDetails)
-                .HasForeignKey(od => od.ItemId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            modelBuilder.Entity<OrderDetail>()
-                .HasOne(od => od.GiftBox)
-                .WithMany(gb => gb.OrderDetails)
-                .HasForeignKey(od => od.ItemId)
+                .HasForeignKey(od => od.ProductId)
                 .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<Order>()

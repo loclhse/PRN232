@@ -20,8 +20,6 @@ namespace Infrastructure.Data
         // Core Products
         public DbSet<Category> Categories { get; set; }
         public DbSet<Product> Products { get; set; }
-        public DbSet<GiftBox> GiftBoxes { get; set; }
-        public DbSet<BoxComponent> BoxComponents { get; set; }
         public DbSet<Image> Images { get; set; }
 
         // Inventory

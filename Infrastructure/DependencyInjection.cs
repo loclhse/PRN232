@@ -14,7 +14,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Application.Service;
 
 namespace Infrastructure
 {
@@ -24,6 +23,8 @@ namespace Infrastructure
         {
             // Cấu hình Database thông qua Factory
             DbFactory.RegisterContext(services, configuration);
+
+            services.AddHttpClient();
 
             // Cấu hình Redis Cache
             services.AddStackExchangeRedisCache(options =>
@@ -36,13 +37,10 @@ namespace Infrastructure
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped<IUnitOfWork, UnitOfWork.UnitOfWork>();
             
+       
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IMailService, MailService>();
-            services.AddScoped<IProductService, ProductService>();
-            services.AddScoped<ICategoryService, CategoryService>();
-            // Thêm dòng này vào chỗ đăng ký các Service khác
-            services.AddScoped<IImageService, ImageService>();
 
             // AutoMapper
             services.AddAutoMapper(cfg => 

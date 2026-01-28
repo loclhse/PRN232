@@ -15,7 +15,5 @@ namespace Domain.Entities
 
         public Guid? ProductId { get; set; }
         public Product? Product { get; set; }
-        public Guid? GiftBoxId { get; set; }
-        public GiftBox? GiftBox { get; set; }
     }
 }
