@@ -80,6 +80,8 @@ namespace Application.Mappings
             // Image Mapping (DTO <-> Entity)
             CreateMap<CreateImageRequest, Image>();
             CreateMap<Image, ImageResponse>();
+            // Mapping cho Update Image
+            CreateMap<UpdateImageRequest, Domain.Entities.Image>();
         }
     }
 }
