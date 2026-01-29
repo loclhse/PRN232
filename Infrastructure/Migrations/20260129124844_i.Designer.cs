@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260129092710_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260129124844_i")]
+    partial class i
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -597,7 +597,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("d4b8e7a0-0b6b-4e6a-9a0b-9c8d7e6f5a4b"),
-                            CreatedAt = new DateTime(2026, 1, 29, 9, 27, 9, 637, DateTimeKind.Utc).AddTicks(150),
+                            CreatedAt = new DateTime(2026, 1, 29, 12, 48, 44, 220, DateTimeKind.Utc).AddTicks(7222),
                             Description = "System Administrator",
                             IsDeleted = false,
                             RoleName = "Admin"
@@ -605,7 +605,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("c5a7d6e8-2f1b-4d3c-9b0a-8c7d6e5f4a3b"),
-                            CreatedAt = new DateTime(2026, 1, 29, 9, 27, 9, 637, DateTimeKind.Utc).AddTicks(157),
+                            CreatedAt = new DateTime(2026, 1, 29, 12, 48, 44, 220, DateTimeKind.Utc).AddTicks(7226),
                             Description = "Staff/Employee",
                             IsDeleted = false,
                             RoleName = "Staff"
@@ -613,7 +613,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("b6a5d4e3-1c2b-4a3d-9e0f-7b6a5c4d3e2f"),
-                            CreatedAt = new DateTime(2026, 1, 29, 9, 27, 9, 637, DateTimeKind.Utc).AddTicks(159),
+                            CreatedAt = new DateTime(2026, 1, 29, 12, 48, 44, 220, DateTimeKind.Utc).AddTicks(7228),
                             Description = "Registered Customer",
                             IsDeleted = false,
                             RoleName = "Customer"
@@ -621,7 +621,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4a3b-8c9d-0e1f2a3b4c5d"),
-                            CreatedAt = new DateTime(2026, 1, 29, 9, 27, 9, 637, DateTimeKind.Utc).AddTicks(161),
+                            CreatedAt = new DateTime(2026, 1, 29, 12, 48, 44, 220, DateTimeKind.Utc).AddTicks(7229),
                             Description = "Guest User",
                             IsDeleted = false,
                             RoleName = "Guest"
@@ -703,7 +703,7 @@ namespace Infrastructure.Migrations
                             FullName = "System Admin",
                             IsActive = true,
                             IsDeleted = false,
-                            PasswordHash = "$2a$11$TN6UaiF9bYdRBLNEysnYp.8d2J.hbIxpKWTXiKappiyHnSUGIz/.K",
+                            PasswordHash = "$2a$11$bLrn4QxgGs.CxeMwO4ury.9GmeZDLz44.jJ64dmWzv2hirBZxqoFi",
                             Phone = "",
                             RoleId = new Guid("d4b8e7a0-0b6b-4e6a-9a0b-9c8d7e6f5a4b"),
                             Username = "admin"
@@ -717,7 +717,7 @@ namespace Infrastructure.Migrations
                             FullName = "Nguyen Van Staff",
                             IsActive = true,
                             IsDeleted = false,
-                            PasswordHash = "$2a$11$SKJY4tjv5Q3AWOW/3nuwoutpM/6XP7WrbBwyDmXxmtSZowyKAWtUq",
+                            PasswordHash = "$2a$11$SA3wCUjFzZHvxx2MHB/NX.6z5RKV3oo0oDT7CYKFxtOvtuJe36ih6",
                             Phone = "",
                             RoleId = new Guid("c5a7d6e8-2f1b-4d3c-9b0a-8c7d6e5f4a3b"),
                             Username = "staff"
