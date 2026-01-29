@@ -1,11 +1,11 @@
-using Application.IService;
 using Domain.IRepositories;
 using Domain.IUnitOfWork;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
-using Infrastructure.Services;
+using Infrastructure.Core;
 using Infrastructure.UnitOfWork;
 using Application.Mappings;
+using Application.Service;
 using Infrastructure.Mappings;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +14,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Application.Service;
+using Application.Service.Category;
+using Application.Service.Product;
+using Application.Service.Image;
 
 namespace Infrastructure
 {
@@ -24,6 +26,8 @@ namespace Infrastructure
         {
             // Cấu hình Database thông qua Factory
             DbFactory.RegisterContext(services, configuration);
+
+            services.AddHttpClient();
 
             // Cấu hình Redis Cache
             services.AddStackExchangeRedisCache(options =>
@@ -36,12 +40,13 @@ namespace Infrastructure
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped<IUnitOfWork, UnitOfWork.UnitOfWork>();
             
+       
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IMailService, MailService>();
-            services.AddScoped<IProductService, ProductService>();
+
             services.AddScoped<ICategoryService, CategoryService>();
-            // Thêm dòng này vào chỗ đăng ký các Service khác
+            services.AddScoped<IProductService, ProductService>();
             services.AddScoped<IImageService, ImageService>();
 
             // AutoMapper

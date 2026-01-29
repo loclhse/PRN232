@@ -1,5 +1,5 @@
-﻿using Application.DTOs.Request;
-using Application.IService;
+﻿using Application.DTOs.Request.Image;
+using Application.Service.Image;
 using Microsoft.AspNetCore.Mvc;
 
 [Route("api/[controller]")]

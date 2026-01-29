@@ -1,9 +1,11 @@
-using Application.DTOs.Request;
-using Application.DTOs.Response;
-using Application.IService;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
+using Application.Service;
+using Application.DTOs.Request.Register;
+using Application.DTOs.Request.Auth;
+using Application.DTOs.Response.Auth;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace PRN2322.Controllers
 {
@@ -13,10 +15,12 @@ namespace PRN2322.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IDistributedCache _cache;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, IDistributedCache cache)
         {
             _authService = authService;
+            _cache = cache;
         }
 
         [HttpPost("google-login")]
@@ -90,25 +94,50 @@ namespace PRN2322.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var result = await _authService.ForgotPassword(request.Email);
-            
-           
-            return Ok(new { message = "If your email exists in our system, you will receive a reset link." });
+            try
+            {
+                var result = await _authService.ForgotPassword(request.Email);
+                return Ok(new { message = "If your email exists in our system, you will receive a reset link." });
+            }
+            catch (Exception ex)
+            {
+                // Log exception để debug (có thể thêm ILogger sau)
+                return StatusCode(500, new { message = "An error occurred while processing your request.", error = ex.Message });
+            }
         }
 
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordWithOtpRequest request)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-
-            var result = await _authService.ResetPassword(request);
-
-            if (!result)
+            if (!ModelState.IsValid) 
             {
-                return BadRequest("Invalid or expired OTP code.");
+                return BadRequest(new { 
+                    message = "Validation failed", 
+                    errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage))
+                });
             }
 
-            return Ok(new { message = "Password has been reset successfully." });
+            try
+            {
+                var result = await _authService.ResetPassword(request);
+
+                if (!result)
+                {
+                    return BadRequest(new { 
+                        message = "Invalid or expired OTP code.",
+                        hint = "Please check your OTP code and ensure it hasn't expired (5 minutes)"
+                    });
+                }
+
+                return Ok(new { message = "Password has been reset successfully." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { 
+                    message = "An error occurred while resetting password.", 
+                    error = ex.Message 
+                });
+            }
         }
 
         [Authorize]
@@ -122,6 +151,23 @@ namespace PRN2322.Controllers
             if (result == null) return NotFound("User not found.");
 
             return Ok(result);
+        }
+
+        // Debug endpoint - XÓA SAU KHI HOÀN THÀNH TEST
+        [HttpGet("debug/check-otp/{email}")]
+        public async Task<IActionResult> CheckOtp(string email)
+        {
+            var cacheKey = $"otp:{email}";
+            var otp = await _cache.GetStringAsync(cacheKey);
+            
+            return Ok(new 
+            { 
+                Email = email,
+                CacheKey = cacheKey,
+                Otp = otp ?? "Not found or expired",
+                Exists = otp != null,
+                Message = otp != null ? "OTP found in Redis" : "OTP not found or expired (check within 5 minutes after forgot-password request)"
+            });
         }
     }
 }

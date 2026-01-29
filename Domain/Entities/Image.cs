@@ -14,8 +14,12 @@ namespace Domain.Entities
         public int SortOrder { get; set; }
 
         public Guid? ProductId { get; set; }
-        public Product? Product { get; set; }
         public Guid? GiftBoxId { get; set; }
+
+        [ForeignKey("ProductId")]
+        public Product? Product { get; set; }
+
+        [ForeignKey("GiftBoxId")]
         public GiftBox? GiftBox { get; set; }
     }
 }

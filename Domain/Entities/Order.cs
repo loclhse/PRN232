@@ -11,7 +11,6 @@ namespace Domain.Entities
         public string OrderNumber { get; set; } = string.Empty;
 
         public Guid UserId { get; set; }
-        public Guid BranchId { get; set; }
         public Guid? VoucherId { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
@@ -32,9 +31,6 @@ namespace Domain.Entities
 
         [ForeignKey("UserId")]
         public virtual User User { get; set; } = null!;
-
-        [ForeignKey("BranchId")]
-        public virtual Branch Branch { get; set; } = null!;
 
         [ForeignKey("VoucherId")]
         public virtual Voucher? Voucher { get; set; }

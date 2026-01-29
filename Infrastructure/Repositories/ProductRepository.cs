@@ -1,11 +1,6 @@
-﻿using Domain.Entities;
+using Domain.Entities;
 using Domain.IRepositories;
 using Infrastructure.Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Repositories
 {
@@ -14,5 +9,7 @@ namespace Infrastructure.Repositories
         public ProductRepository(AppDbContext context) : base(context)
         {
         }
+
+        // Có thể override hoặc thêm các method cụ thể cho Product ở đây
     }
 }

@@ -16,23 +16,58 @@ namespace Infrastructure.Configurations
                 .HasMaxLength(50);
 
             // =========================================================
+            // IDENTITY
+            // =========================================================
+
+            // User - Role
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Role)
+                .WithMany(r => r.Users)
+                .HasForeignKey(u => u.RoleId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // =========================================================
+            // GIFT BOX COMPONENT CONFIG
+            // =========================================================
+
+            modelBuilder.Entity<GiftBoxComponentConfig>()
+                .Property(gc => gc.Price)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<GiftBoxComponentConfig>()
+                .HasIndex(gc => gc.Name)
+                .IsUnique();
+
+            // =========================================================
             // CORE PRODUCTS
             // =========================================================
 
-            // BoxComponent Composite Key (Many-to-Many between GiftBox and Product)
-            modelBuilder.Entity<BoxComponent>()
-                .HasKey(bc => new { bc.GiftBoxId, bc.ProductId });
-
-            modelBuilder.Entity<BoxComponent>()
-                .HasOne(bc => bc.GiftBox)
-                .WithMany(gb => gb.BoxComponents)
-                .HasForeignKey(bc => bc.GiftBoxId)
+            // Category - Product
+            modelBuilder.Entity<Product>()
+                .HasOne(p => p.Category)
+                .WithMany(c => c.Products)
+                .HasForeignKey(p => p.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<BoxComponent>()
-                .HasOne(bc => bc.Product)
-                .WithMany(p => p.BoxComponents)
-                .HasForeignKey(bc => bc.ProductId)
+            // Category Self-Referencing
+            modelBuilder.Entity<Category>()
+                .HasOne(c => c.ParentCategory)
+                .WithMany(c => c.SubCategories)
+                .HasForeignKey(c => c.ParentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Category - GiftBox
+            modelBuilder.Entity<GiftBox>()
+                .HasOne(gb => gb.Category)
+                .WithMany(c => c.GiftBoxes)
+                .HasForeignKey(gb => gb.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // GiftBox - ComponentConfig (1-1)
+            modelBuilder.Entity<GiftBox>()
+                .HasOne(gb => gb.ComponentConfig)
+                .WithOne()
+                .HasForeignKey<GiftBox>(gb => gb.GiftBoxComponentConfigId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Image - Product (nullable)
@@ -49,21 +84,37 @@ namespace Infrastructure.Configurations
                 .HasForeignKey(i => i.GiftBoxId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Category Self-Referencing
-            modelBuilder.Entity<Category>()
-                .HasOne(c => c.ParentCategory)
-                .WithMany(c => c.SubCategories)
-                .HasForeignKey(c => c.ParentId)
+            // BoxComponent - GiftBox
+            modelBuilder.Entity<BoxComponent>()
+                .HasOne(bc => bc.GiftBox)
+                .WithMany(gb => gb.BoxComponents)
+                .HasForeignKey(bc => bc.GiftBoxId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // BoxComponent - Product
+            modelBuilder.Entity<BoxComponent>()
+                .HasOne(bc => bc.Product)
+                .WithMany(p => p.BoxComponents)
+                .HasForeignKey(bc => bc.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // =========================================================
             // INVENTORY
             // =========================================================
 
-            // Inventory should be unique per Branch + Product
+            // Inventory - Product
             modelBuilder.Entity<Inventory>()
-                .HasIndex(i => new { i.BranchId, i.ProductId })
-                .IsUnique();
+                .HasOne(inv => inv.Product)
+                .WithMany(p => p.Inventories)
+                .HasForeignKey(inv => inv.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // InventoryTransaction - Inventory
+            modelBuilder.Entity<InventoryTransaction>()
+                .HasOne(it => it.Inventory)
+                .WithMany(inv => inv.Transactions)
+                .HasForeignKey(it => it.InventoryId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // =========================================================
             // SALES
@@ -74,12 +125,6 @@ namespace Infrastructure.Configurations
                 .HasOne(o => o.User)
                 .WithMany(u => u.Orders)
                 .HasForeignKey(o => o.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Order>()
-                .HasOne(o => o.Branch)
-                .WithMany(b => b.Orders)
-                .HasForeignKey(o => o.BranchId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Precision for Decimal types
@@ -96,14 +141,29 @@ namespace Infrastructure.Configurations
             modelBuilder.Entity<OrderDetail>()
                 .HasOne(od => od.Product)
                 .WithMany(p => p.OrderDetails)
-                .HasForeignKey(od => od.ItemId)
+                .HasForeignKey(od => od.ProductId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            modelBuilder.Entity<OrderDetail>()
-                .HasOne(od => od.GiftBox)
-                .WithMany(gb => gb.OrderDetails)
-                .HasForeignKey(od => od.ItemId)
-                .OnDelete(DeleteBehavior.NoAction);
+            // OrderHistory - Order
+            modelBuilder.Entity<OrderHistory>()
+                .HasOne(oh => oh.Order)
+                .WithMany(o => o.OrderHistories)
+                .HasForeignKey(oh => oh.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Payment - Order
+            modelBuilder.Entity<Payment>()
+                .HasOne(p => p.Order)
+                .WithMany(o => o.Payments)
+                .HasForeignKey(p => p.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // PaymentHistory - Payment
+            modelBuilder.Entity<PaymentHistory>()
+                .HasOne(ph => ph.Payment)
+                .WithMany(p => p.PaymentHistories)
+                .HasForeignKey(ph => ph.PaymentId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Order>()
                 .Property(o => o.TotalAmount)
@@ -124,7 +184,14 @@ namespace Infrastructure.Configurations
             // =========================================================
             // FINANCE
             // =========================================================
-            
+
+            // Order - Voucher (optional)
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.Voucher)
+                .WithMany(v => v.Orders)
+                .HasForeignKey(o => o.VoucherId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             modelBuilder.Entity<Payment>()
                 .Property(p => p.Amount)
                 .HasPrecision(18, 2);

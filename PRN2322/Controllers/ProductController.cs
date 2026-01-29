@@ -1,6 +1,6 @@
-﻿using Application.DTOs.Request;
-using Application.DTOs.Response;
-using Application.IService;
+﻿using Application.DTOs.Request.Product;
+using Application.DTOs.Response.Product;
+using Application.Service.Product;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

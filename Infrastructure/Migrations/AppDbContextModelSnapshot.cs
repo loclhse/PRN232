@@ -24,20 +24,21 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.BoxComponent", b =>
                 {
-                    b.Property<Guid>("GiftBoxId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ProductId")
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("GiftBoxId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
@@ -45,63 +46,13 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.HasKey("GiftBoxId", "ProductId");
+                    b.HasKey("Id");
+
+                    b.HasIndex("GiftBoxId");
 
                     b.HasIndex("ProductId");
 
                     b.ToTable("BoxComponents");
-                });
-
-            modelBuilder.Entity("Domain.Entities.Branch", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
-
-                    b.Property<string>("BranchName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Phone")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("Region")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Branches");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("7c8d9e0f-1a2b-3c4d-5e6f-7a8b9c0d1e2f"),
-                            Address = "Ho Chi Minh City",
-                            BranchName = "HappyBox HQ",
-                            CreatedAt = new DateTime(2026, 1, 26, 12, 25, 35, 360, DateTimeKind.Utc).AddTicks(9559),
-                            IsDeleted = false,
-                            Phone = "0909000111",
-                            Region = "HCM"
-                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Category", b =>
@@ -158,6 +109,9 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("GiftBoxComponentConfigId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -176,7 +130,55 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("CategoryId");
 
+                    b.HasIndex("GiftBoxComponentConfigId")
+                        .IsUnique();
+
                     b.ToTable("GiftBoxes");
+                });
+
+            modelBuilder.Entity("Domain.Entities.GiftBoxComponentConfig", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("GiftBoxComponentConfigs");
                 });
 
             modelBuilder.Entity("Domain.Entities.Image", b =>
@@ -226,9 +228,6 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("BranchId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -256,9 +255,6 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ProductId");
-
-                    b.HasIndex("BranchId", "ProductId")
-                        .IsUnique();
 
                     b.ToTable("Inventories");
                 });
@@ -313,9 +309,6 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("BranchId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -360,8 +353,6 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BranchId");
-
                     b.HasIndex("UserId");
 
                     b.HasIndex("VoucherId");
@@ -378,18 +369,16 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<Guid?>("GiftBoxId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("ItemId")
+                    b.Property<Guid>("OrderId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ItemType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<Guid>("OrderId")
+                    b.Property<Guid>("ProductId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Quantity")
@@ -404,9 +393,11 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ItemId");
+                    b.HasIndex("GiftBoxId");
 
                     b.HasIndex("OrderId");
+
+                    b.HasIndex("ProductId");
 
                     b.ToTable("OrderDetails");
                 });
@@ -603,7 +594,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("d4b8e7a0-0b6b-4e6a-9a0b-9c8d7e6f5a4b"),
-                            CreatedAt = new DateTime(2026, 1, 26, 12, 25, 35, 360, DateTimeKind.Utc).AddTicks(9391),
+                            CreatedAt = new DateTime(2026, 1, 29, 9, 27, 9, 637, DateTimeKind.Utc).AddTicks(150),
                             Description = "System Administrator",
                             IsDeleted = false,
                             RoleName = "Admin"
@@ -611,7 +602,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("c5a7d6e8-2f1b-4d3c-9b0a-8c7d6e5f4a3b"),
-                            CreatedAt = new DateTime(2026, 1, 26, 12, 25, 35, 360, DateTimeKind.Utc).AddTicks(9395),
+                            CreatedAt = new DateTime(2026, 1, 29, 9, 27, 9, 637, DateTimeKind.Utc).AddTicks(157),
                             Description = "Staff/Employee",
                             IsDeleted = false,
                             RoleName = "Staff"
@@ -619,7 +610,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("b6a5d4e3-1c2b-4a3d-9e0f-7b6a5c4d3e2f"),
-                            CreatedAt = new DateTime(2026, 1, 26, 12, 25, 35, 360, DateTimeKind.Utc).AddTicks(9397),
+                            CreatedAt = new DateTime(2026, 1, 29, 9, 27, 9, 637, DateTimeKind.Utc).AddTicks(159),
                             Description = "Registered Customer",
                             IsDeleted = false,
                             RoleName = "Customer"
@@ -627,7 +618,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4a3b-8c9d-0e1f2a3b4c5d"),
-                            CreatedAt = new DateTime(2026, 1, 26, 12, 25, 35, 360, DateTimeKind.Utc).AddTicks(9398),
+                            CreatedAt = new DateTime(2026, 1, 29, 9, 27, 9, 637, DateTimeKind.Utc).AddTicks(161),
                             Description = "Guest User",
                             IsDeleted = false,
                             RoleName = "Guest"
@@ -644,9 +635,6 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
-
-                    b.Property<Guid?>("BranchId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CompanyName")
                         .HasMaxLength(200)
@@ -698,8 +686,6 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BranchId");
-
                     b.HasIndex("RoleId");
 
                     b.ToTable("Users");
@@ -714,7 +700,7 @@ namespace Infrastructure.Migrations
                             FullName = "System Admin",
                             IsActive = true,
                             IsDeleted = false,
-                            PasswordHash = "$2a$11$tI.kXa.PJnERu1UOlrWwfOmzG9J4wBQgCGdHBFUXC6hAhQEGBuUnK",
+                            PasswordHash = "$2a$11$TN6UaiF9bYdRBLNEysnYp.8d2J.hbIxpKWTXiKappiyHnSUGIz/.K",
                             Phone = "",
                             RoleId = new Guid("d4b8e7a0-0b6b-4e6a-9a0b-9c8d7e6f5a4b"),
                             Username = "admin"
@@ -723,13 +709,12 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("e9d8c7b6-a5b4-4c3d-2e1f-0a1b2c3d4e5f"),
                             Address = "",
-                            BranchId = new Guid("7c8d9e0f-1a2b-3c4d-5e6f-7a8b9c0d1e2f"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "staff@happybox.vn",
                             FullName = "Nguyen Van Staff",
                             IsActive = true,
                             IsDeleted = false,
-                            PasswordHash = "$2a$11$bwArUdmGdp0IierqUs0Nu.nRZZMuvNWCa95sW2/qkIUi675iG6/uq",
+                            PasswordHash = "$2a$11$SKJY4tjv5Q3AWOW/3nuwoutpM/6XP7WrbBwyDmXxmtSZowyKAWtUq",
                             Phone = "",
                             RoleId = new Guid("c5a7d6e8-2f1b-4d3c-9b0a-8c7d6e5f4a3b"),
                             Username = "staff"
@@ -800,7 +785,7 @@ namespace Infrastructure.Migrations
                     b.HasOne("Domain.Entities.GiftBox", "GiftBox")
                         .WithMany("BoxComponents")
                         .HasForeignKey("GiftBoxId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Domain.Entities.Product", "Product")
@@ -829,10 +814,18 @@ namespace Infrastructure.Migrations
                     b.HasOne("Domain.Entities.Category", "Category")
                         .WithMany("GiftBoxes")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.GiftBoxComponentConfig", "ComponentConfig")
+                        .WithOne()
+                        .HasForeignKey("Domain.Entities.GiftBox", "GiftBoxComponentConfigId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Category");
+
+                    b.Navigation("ComponentConfig");
                 });
 
             modelBuilder.Entity("Domain.Entities.Image", b =>
@@ -854,19 +847,11 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.Inventory", b =>
                 {
-                    b.HasOne("Domain.Entities.Branch", "Branch")
-                        .WithMany("Inventories")
-                        .HasForeignKey("BranchId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Domain.Entities.Product", "Product")
                         .WithMany("Inventories")
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Branch");
 
                     b.Navigation("Product");
                 });
@@ -884,12 +869,6 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.Order", b =>
                 {
-                    b.HasOne("Domain.Entities.Branch", "Branch")
-                        .WithMany("Orders")
-                        .HasForeignKey("BranchId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("Domain.Entities.User", "User")
                         .WithMany("Orders")
                         .HasForeignKey("UserId")
@@ -898,9 +877,8 @@ namespace Infrastructure.Migrations
 
                     b.HasOne("Domain.Entities.Voucher", "Voucher")
                         .WithMany("Orders")
-                        .HasForeignKey("VoucherId");
-
-                    b.Navigation("Branch");
+                        .HasForeignKey("VoucherId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("User");
 
@@ -909,17 +887,9 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.OrderDetail", b =>
                 {
-                    b.HasOne("Domain.Entities.GiftBox", "GiftBox")
+                    b.HasOne("Domain.Entities.GiftBox", null)
                         .WithMany("OrderDetails")
-                        .HasForeignKey("ItemId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Domain.Entities.Product", "Product")
-                        .WithMany("OrderDetails")
-                        .HasForeignKey("ItemId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .HasForeignKey("GiftBoxId");
 
                     b.HasOne("Domain.Entities.Order", "Order")
                         .WithMany("OrderDetails")
@@ -927,7 +897,11 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("GiftBox");
+                    b.HasOne("Domain.Entities.Product", "Product")
+                        .WithMany("OrderDetails")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.Navigation("Order");
 
@@ -972,7 +946,7 @@ namespace Infrastructure.Migrations
                     b.HasOne("Domain.Entities.Category", "Category")
                         .WithMany("Products")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Category");
@@ -980,28 +954,13 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.User", b =>
                 {
-                    b.HasOne("Domain.Entities.Branch", "Branch")
-                        .WithMany("Staffs")
-                        .HasForeignKey("BranchId");
-
                     b.HasOne("Domain.Entities.Role", "Role")
                         .WithMany("Users")
                         .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Branch");
-
                     b.Navigation("Role");
-                });
-
-            modelBuilder.Entity("Domain.Entities.Branch", b =>
-                {
-                    b.Navigation("Inventories");
-
-                    b.Navigation("Orders");
-
-                    b.Navigation("Staffs");
                 });
 
             modelBuilder.Entity("Domain.Entities.Category", b =>
