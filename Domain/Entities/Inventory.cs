@@ -9,7 +9,6 @@ namespace Domain.Entities
     public class Inventory : BaseEntity
     {
 
-        public Guid BranchId { get; set; }
         public Guid ProductId { get; set; }
 
         public int Quantity { get; set; }
@@ -18,9 +17,6 @@ namespace Domain.Entities
         public InventoryStatus Status { get; set; } = InventoryStatus.InStock;
 
         public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
-
-        [ForeignKey("BranchId")]
-        public virtual Branch Branch { get; set; } = null!;
 
         [ForeignKey("ProductId")]
         public virtual Product Product { get; set; } = null!;

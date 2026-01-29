@@ -1,11 +1,11 @@
-using Application.IService;
 using Domain.IRepositories;
 using Domain.IUnitOfWork;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
-using Infrastructure.Services;
+using Infrastructure.Core;
 using Infrastructure.UnitOfWork;
 using Application.Mappings;
+using Application.Service;
 using Infrastructure.Mappings;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +14,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Application.Service.Category;
+using Application.Service.Product;
+using Application.Service.Image;
 
 namespace Infrastructure
 {
@@ -41,6 +44,10 @@ namespace Infrastructure
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IMailService, MailService>();
+
+            services.AddScoped<ICategoryService, CategoryService>();
+            services.AddScoped<IProductService, ProductService>();
+            services.AddScoped<IImageService, ImageService>();
 
             // AutoMapper
             services.AddAutoMapper(cfg => 

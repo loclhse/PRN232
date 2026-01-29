@@ -12,12 +12,16 @@ namespace Infrastructure.UnitOfWork
         private readonly AppDbContext _context;
         private IDbContextTransaction? _transaction;
         private readonly Dictionary<Type, object> _repositories = new();
+        
+        private IUserRepository? _userRepository;
+        private IProductRepository? _productRepository;
+        private ICategoryRepository? _categoryRepository;
+        private IOrderRepository? _orderRepository;
+        private IRoleRepository? _roleRepository;
 
         public UnitOfWork(AppDbContext context)
         {
             _context = context;
-            productRepository = new ProductRepository(_context);
-            categoryRepository = new CategoryRepository(_context);
         }
 
         public IUserRepository UserRepository

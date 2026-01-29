@@ -32,7 +32,6 @@ namespace Domain.Entities
 
         // Foreign Keys
         public Guid RoleId { get; set; }
-        public Guid? BranchId { get; set; } // For Staff
 
         // B2B Info
         [MaxLength(50)]
@@ -44,9 +43,6 @@ namespace Domain.Entities
         // Navigation Properties
         [ForeignKey("RoleId")]
         public virtual Role Role { get; set; } = null!;
-
-        [ForeignKey("BranchId")]
-        public virtual Branch? Branch { get; set; }
 
         public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
     }

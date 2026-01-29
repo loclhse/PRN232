@@ -21,9 +21,11 @@ namespace Infrastructure.Data
         public DbSet<Category> Categories { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<Image> Images { get; set; }
+        public DbSet<GiftBox> GiftBoxes { get; set; }
+        public DbSet<GiftBoxComponentConfig> GiftBoxComponentConfigs { get; set; }
+        public DbSet<BoxComponent> BoxComponents { get; set; }
 
         // Inventory
-        public DbSet<Branch> Branches { get; set; }
         public DbSet<Inventory> Inventories { get; set; }
         public DbSet<InventoryTransaction> InventoryTransactions { get; set; }
 
