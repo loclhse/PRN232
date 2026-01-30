@@ -56,5 +56,38 @@ namespace Application.Service.Image
             repo.Remove(image);
             await _unitOfWork.SaveChangesAsync();
         }
+
+        public async Task<IEnumerable<ImageResponse>> GetAllImagesAsync()
+        {
+            // Gọi Generic Repository để lấy tất cả
+            var images = await _unitOfWork.Repository<Domain.Entities.Image>().GetAllAsync();
+
+            // Map sang Response DTO
+            return _mapper.Map<IEnumerable<ImageResponse>>(images);
+        }
+
+        public async Task UpdateImageAsync(Guid id, UpdateImageRequest request)
+        {
+            var repo = _unitOfWork.Repository<Domain.Entities.Image>();
+
+            // 1. Tìm ảnh cũ trong DB
+            var existingImage = await repo.GetByIdAsync(id);
+            if (existingImage == null)
+            {
+                throw new KeyNotFoundException("Image not found");
+            }
+
+            // 2. Map dữ liệu mới đè lên dữ liệu cũ (AutoMapper xử lý việc này)
+            _mapper.Map(request, existingImage);
+
+            // Cập nhật thời gian update
+            existingImage.UpdatedAt = DateTime.UtcNow; // Hoặc DateTime.Now tùy múi giờ server
+
+            // 3. Gọi lệnh Update của Generic Repository
+            repo.Update(existingImage);
+
+            // 4. Lưu thay đổi
+            await _unitOfWork.SaveChangesAsync();
+        }
     }
 }

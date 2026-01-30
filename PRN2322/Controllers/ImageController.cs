@@ -66,4 +66,5 @@ public class ImageController : ControllerBase
             return StatusCode(500, ApiResponse.FailureResponse("An error occurred while deleting image.", new List<string> { ex.Message }));
         }
     }
+
 }
