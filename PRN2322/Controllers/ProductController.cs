@@ -1,5 +1,6 @@
-﻿using Application.DTOs.Request.Product;
+using Application.DTOs.Request.Product;
 using Application.DTOs.Response.Product;
+using Application.DTOs.Response;
 using Application.Service.Product;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,26 +22,40 @@ namespace PRN2322.Controllers
         /// Lấy danh sách tất cả sản phẩm
         /// </summary>
         [HttpGet("GetAllProducts")]
-        public async Task<ActionResult<IEnumerable<ProductResponse>>> GetAllProducts()
+        public async Task<ActionResult<ApiResponse<IEnumerable<ProductResponse>>>> GetAllProducts()
         {
-            var products = await _productService.GetAllProductsAsync();
-            return Ok(products);
+            try
+            {
+                var products = await _productService.GetAllProductsAsync();
+                return Ok(ApiResponse<IEnumerable<ProductResponse>>.SuccessResponse(products, "Products retrieved successfully"));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<IEnumerable<ProductResponse>>.FailureResponse("An error occurred while retrieving products.", new List<string> { ex.Message }));
+            }
         }
 
         /// <summary>
         /// Lấy thông tin sản phẩm theo ID
         /// </summary>
         [HttpGet("GetProductById/{id}")]
-        public async Task<ActionResult<ProductResponse>> GetProductById(Guid id)
+        public async Task<ActionResult<ApiResponse<ProductResponse>>> GetProductById(Guid id)
         {
-            var product = await _productService.GetProductByIdAsync(id);
-            
-            if (product == null)
+            try
             {
-                return NotFound(new { message = "Product not found." });
-            }
+                var product = await _productService.GetProductByIdAsync(id);
+                
+                if (product == null)
+                {
+                    return NotFound(ApiResponse<ProductResponse>.FailureResponse("Product not found."));
+                }
 
-            return Ok(product);
+                return Ok(ApiResponse<ProductResponse>.SuccessResponse(product, "Product retrieved successfully"));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<ProductResponse>.FailureResponse("An error occurred while retrieving product.", new List<string> { ex.Message }));
+            }
         }
 
         /// <summary>
@@ -48,25 +63,30 @@ namespace PRN2322.Controllers
         /// </summary>
         [HttpPost("CreateProduct")]
         //[Authorize]
-        public async Task<ActionResult<ProductResponse>> CreateProduct([FromBody] CreateProductRequest request)
+        public async Task<ActionResult<ApiResponse<ProductResponse>>> CreateProduct([FromBody] CreateProductRequest request)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                var errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToList();
+                return BadRequest(ApiResponse<ProductResponse>.FailureResponse("Validation failed", errors));
             }
 
             try
             {
                 var product = await _productService.CreateProductAsync(request);
-                return CreatedAtAction(nameof(GetProductById), new { id = product.Id }, product);
+                return CreatedAtAction(
+                    nameof(GetProductById), 
+                    new { id = product.Id }, 
+                    ApiResponse<ProductResponse>.SuccessResponse(product, "Product created successfully")
+                );
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(ApiResponse<ProductResponse>.FailureResponse(ex.Message));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while creating the product.", error = ex.Message });
+                return StatusCode(500, ApiResponse<ProductResponse>.FailureResponse("An error occurred while creating the product.", new List<string> { ex.Message }));
             }
         }
 
@@ -75,11 +95,12 @@ namespace PRN2322.Controllers
         /// </summary>
         [HttpPut("UpdateProduct/{id}")]
         //[Authorize]
-        public async Task<ActionResult<ProductResponse>> UpdateProduct(Guid id, [FromBody] UpdateProductRequest request)
+        public async Task<ActionResult<ApiResponse<ProductResponse>>> UpdateProduct(Guid id, [FromBody] UpdateProductRequest request)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                var errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToList();
+                return BadRequest(ApiResponse<ProductResponse>.FailureResponse("Validation failed", errors));
             }
 
             try
@@ -88,18 +109,18 @@ namespace PRN2322.Controllers
                 
                 if (product == null)
                 {
-                    return NotFound(new { message = "Product not found." });
+                    return NotFound(ApiResponse<ProductResponse>.FailureResponse("Product not found."));
                 }
 
-                return Ok(product);
+                return Ok(ApiResponse<ProductResponse>.SuccessResponse(product, "Product updated successfully"));
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(ApiResponse<ProductResponse>.FailureResponse(ex.Message));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while updating the product.", error = ex.Message });
+                return StatusCode(500, ApiResponse<ProductResponse>.FailureResponse("An error occurred while updating the product.", new List<string> { ex.Message }));
             }
         }
 
@@ -108,16 +129,23 @@ namespace PRN2322.Controllers
         /// </summary>
         [HttpDelete("DeleteProduct/{id}")]
         //[Authorize]
-        public async Task<IActionResult> DeleteProduct(Guid id)
+        public async Task<ActionResult<ApiResponse>> DeleteProduct(Guid id)
         {
-            var result = await _productService.DeleteProductAsync(id);
-            
-            if (!result)
+            try
             {
-                return NotFound(new { message = "Product not found." });
-            }
+                var result = await _productService.DeleteProductAsync(id);
+                
+                if (!result)
+                {
+                    return NotFound(ApiResponse.FailureResponse("Product not found."));
+                }
 
-            return NoContent();
+                return Ok(ApiResponse.SuccessResponse("Product deleted successfully"));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse.FailureResponse("An error occurred while deleting product.", new List<string> { ex.Message }));
+            }
         }
     }
 }
