@@ -5,6 +5,7 @@ using Application.Service;
 using Application.DTOs.Request.Register;
 using Application.DTOs.Request.Auth;
 using Application.DTOs.Response.Auth;
+using Application.DTOs.Response;
 using Microsoft.Extensions.Caching.Distributed;
 
 namespace PRN2322.Controllers
@@ -24,97 +25,106 @@ namespace PRN2322.Controllers
         }
 
         [HttpPost("google-login")]
-        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
+        public async Task<ActionResult<ApiResponse<TokenModel>>> GoogleLogin([FromBody] GoogleLoginRequest request)
         {
             if (string.IsNullOrEmpty(request.Credential))
             {
-                return BadRequest("Credential is required.");
+                return BadRequest(ApiResponse<TokenModel>.FailureResponse("Credential is required."));
             }
 
             var result = await _authService.LoginWithGoogle(request.Credential);
 
             if (result == null)
             {
-                return Unauthorized("Invalid Google credential.");
+                return Unauthorized(ApiResponse<TokenModel>.FailureResponse("Invalid Google credential."));
             }
 
-            return Ok(result);
+            return Ok(ApiResponse<TokenModel>.SuccessResponse(result, "Login successful"));
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        public async Task<ActionResult<ApiResponse<TokenModel>>> Login([FromBody] LoginRequest request)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToList();
+                return BadRequest(ApiResponse<TokenModel>.FailureResponse("Validation failed", errors));
+            }
 
             var result = await _authService.Login(request);
 
             if (result == null)
             {
-                return Unauthorized("Invalid email or password.");
+                return Unauthorized(ApiResponse<TokenModel>.FailureResponse("Invalid email or password."));
             }
 
-            return Ok(result);
+            return Ok(ApiResponse<TokenModel>.SuccessResponse(result, "Login successful"));
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        public async Task<ActionResult<ApiResponse>> Register([FromBody] RegisterRequest request)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToList();
+                return BadRequest(ApiResponse.FailureResponse("Validation failed", errors));
+            }
 
             var result = await _authService.Register(request);
 
             if (!result)
             {
-                return BadRequest("Username or Email already exists.");
+                return BadRequest(ApiResponse.FailureResponse("Username or Email already exists."));
             }
 
-            return Ok(new { message = "Registration successful" });
+            return Ok(ApiResponse.SuccessResponse("Registration successful"));
         }
 
         [HttpPost("refresh-token")]
-        public async Task<IActionResult> RefreshToken([FromBody] TokenModel tokenModel)
+        public async Task<ActionResult<ApiResponse<TokenModel>>> RefreshToken([FromBody] TokenModel tokenModel)
         {
             if (tokenModel is null)
             {
-                return BadRequest("Invalid client request");
+                return BadRequest(ApiResponse<TokenModel>.FailureResponse("Invalid client request"));
             }
 
             var result = await _authService.RefreshToken(tokenModel);
 
             if (result == null)
             {
-                return BadRequest("Invalid token or refresh token");
+                return BadRequest(ApiResponse<TokenModel>.FailureResponse("Invalid token or refresh token"));
             }
 
-            return Ok(result);
+            return Ok(ApiResponse<TokenModel>.SuccessResponse(result, "Token refreshed successfully"));
         }
 
         [HttpPost("forgot-password")]
-        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        public async Task<ActionResult<ApiResponse>> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToList();
+                return BadRequest(ApiResponse.FailureResponse("Validation failed", errors));
+            }
 
             try
             {
                 var result = await _authService.ForgotPassword(request.Email);
-                return Ok(new { message = "If your email exists in our system, you will receive a reset link." });
+                return Ok(ApiResponse.SuccessResponse("If your email exists in our system, you will receive a reset link."));
             }
             catch (Exception ex)
             {
-                // Log exception để debug (có thể thêm ILogger sau)
-                return StatusCode(500, new { message = "An error occurred while processing your request.", error = ex.Message });
+                return StatusCode(500, ApiResponse.FailureResponse("An error occurred while processing your request.", new List<string> { ex.Message }));
             }
         }
 
         [HttpPost("reset-password")]
-        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordWithOtpRequest request)
+        public async Task<ActionResult<ApiResponse>> ResetPassword([FromBody] ResetPasswordWithOtpRequest request)
         {
-            if (!ModelState.IsValid) 
+            if (!ModelState.IsValid)
             {
-                return BadRequest(new { 
-                    message = "Validation failed", 
-                    errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage))
-                });
+                var errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToList();
+                return BadRequest(ApiResponse.FailureResponse("Validation failed", errors));
             }
 
             try
@@ -123,51 +133,53 @@ namespace PRN2322.Controllers
 
                 if (!result)
                 {
-                    return BadRequest(new { 
-                        message = "Invalid or expired OTP code.",
-                        hint = "Please check your OTP code and ensure it hasn't expired (5 minutes)"
-                    });
+                    return BadRequest(ApiResponse.FailureResponse("Invalid or expired OTP code."));
                 }
 
-                return Ok(new { message = "Password has been reset successfully." });
+                return Ok(ApiResponse.SuccessResponse("Password has been reset successfully."));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { 
-                    message = "An error occurred while resetting password.", 
-                    error = ex.Message 
-                });
+                return StatusCode(500, ApiResponse.FailureResponse("An error occurred while resetting password.", new List<string> { ex.Message }));
             }
         }
 
         [Authorize]
         [HttpGet("profile")]
-        public async Task<IActionResult> GetProfile()
+        public async Task<ActionResult<ApiResponse<UserResponse>>> GetProfile()
         {
             var email = User.FindFirstValue(ClaimTypes.Email);
-            if (string.IsNullOrEmpty(email)) return Unauthorized();
+            if (string.IsNullOrEmpty(email))
+            {
+                return Unauthorized(ApiResponse<UserResponse>.FailureResponse("Unauthorized"));
+            }
 
             var result = await _authService.GetProfile(email);
-            if (result == null) return NotFound("User not found.");
+            if (result == null)
+            {
+                return NotFound(ApiResponse<UserResponse>.FailureResponse("User not found."));
+            }
 
-            return Ok(result);
+            return Ok(ApiResponse<UserResponse>.SuccessResponse(result, "Profile retrieved successfully"));
         }
 
         // Debug endpoint - XÓA SAU KHI HOÀN THÀNH TEST
         [HttpGet("debug/check-otp/{email}")]
-        public async Task<IActionResult> CheckOtp(string email)
+        public async Task<ActionResult<ApiResponse<object>>> CheckOtp(string email)
         {
             var cacheKey = $"otp:{email}";
             var otp = await _cache.GetStringAsync(cacheKey);
             
-            return Ok(new 
-            { 
+            var debugInfo = new
+            {
                 Email = email,
                 CacheKey = cacheKey,
                 Otp = otp ?? "Not found or expired",
-                Exists = otp != null,
-                Message = otp != null ? "OTP found in Redis" : "OTP not found or expired (check within 5 minutes after forgot-password request)"
-            });
+                Exists = otp != null
+            };
+
+            var message = otp != null ? "OTP found in Redis" : "OTP not found or expired (check within 5 minutes after forgot-password request)";
+            return Ok(ApiResponse<object>.SuccessResponse(debugInfo, message));
         }
     }
 }

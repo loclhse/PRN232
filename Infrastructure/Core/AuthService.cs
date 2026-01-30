@@ -70,7 +70,16 @@ namespace Infrastructure.Core
                 return new TokenModel
                 {
                     AccessToken = accessToken,
-                    RefreshToken = refreshToken
+                    RefreshToken = refreshToken,
+                    User = new UserAuthInfo
+                    {
+                        Id = user.Id,
+                        Email = user.Email,
+                        FullName = user.FullName,
+                        Username = user.Username,
+                        RoleName = user.Role?.RoleName.ToString() ?? "Customer",
+                        IsActive = user.IsActive
+                    }
                 };
             }
             catch (Exception)
@@ -105,7 +114,16 @@ namespace Infrastructure.Core
             return new TokenModel
             {
                 AccessToken = accessToken,
-                RefreshToken = refreshToken
+                RefreshToken = refreshToken,
+                User = new UserAuthInfo
+                {
+                    Id = user.Id,
+                    Email = user.Email,
+                    FullName = user.FullName,
+                    Username = user.Username,
+                    RoleName = user.Role?.RoleName.ToString() ?? "Customer",
+                    IsActive = user.IsActive
+                }
             };
         }
 
