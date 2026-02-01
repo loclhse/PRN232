@@ -11,7 +11,7 @@ namespace Infrastructure.Data
             var connectionString = configuration.GetConnectionString("DefaultConnection");
 
             services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(connectionString,
+                options.UseNpgsql(connectionString,
                     builder => builder.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName)));
         }
     }
