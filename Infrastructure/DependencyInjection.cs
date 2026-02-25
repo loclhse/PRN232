@@ -1,22 +1,24 @@
-using Domain.IRepositories;
-using Domain.IUnitOfWork;
-using Infrastructure.Data;
-using Infrastructure.Repositories;
-using Infrastructure.Core;
-using Infrastructure.UnitOfWork;
+using Application.IService;
 using Application.Mappings;
 using Application.Service;
-using Infrastructure.Mappings;
+using Application.Service.Category;
+using Application.Service.Image;
+using Application.Service.Order;
+using Application.Service.Product;
 using AutoMapper;
+using Domain.IRepositories;
+using Domain.IUnitOfWork;
+using Infrastructure.Core;
+using Infrastructure.Data;
+using Infrastructure.Mappings;
+using Infrastructure.Repositories;
+using Infrastructure.UnitOfWork;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Application.Service.Category;
-using Application.Service.Product;
-using Application.Service.Image;
 
 namespace Infrastructure
 {
@@ -48,7 +50,8 @@ namespace Infrastructure
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IProductService, ProductService>();
             services.AddScoped<IImageService, ImageService>();
-
+            services.AddScoped<IOrderService, OrderService>();
+            services.AddScoped<IVoucherService, VoucherService>();
             // AutoMapper
             services.AddAutoMapper(cfg => 
             {

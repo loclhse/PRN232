@@ -1,15 +1,20 @@
-using Application.DTOs.Request;
+﻿using Application.DTOs.Request;
 using Application.DTOs.Request.Category;
 using Application.DTOs.Request.Image;
+using Application.DTOs.Request.Order;
 using Application.DTOs.Request.Product;
 using Application.DTOs.Request.Register;
+using Application.DTOs.Request.Voucher;
 using Application.DTOs.Response;
 using Application.DTOs.Response.Auth;
 using Application.DTOs.Response.Image;
+using Application.DTOs.Response.Order;
 using Application.DTOs.Response.Product;
+using Application.DTOs.Response.Voucher;
 using AutoMapper;
 using Domain.Constants;
 using Domain.Entities;
+using Domain.Enums;
 
 namespace Application.Mappings
 {
@@ -82,6 +87,41 @@ namespace Application.Mappings
             CreateMap<Image, ImageResponse>();
             // Mapping cho Update Image
             CreateMap<UpdateImageRequest, Domain.Entities.Image>();
+
+            // Order Mapping (DTO <-> Entity)
+            // Map cho Detail
+            CreateMap<CreateOrderDetailRequest, OrderDetail>();
+            CreateMap<OrderDetail, OrderDetailResponse>();
+
+            // Map cho History
+            CreateMap<OrderHistory, OrderHistoryResponse>();
+
+            // Đảm bảo Order map được list Details & Histories
+            CreateMap<Order, OrderResponse>()
+                .ForMember(dest => dest.OrderDetails, opt => opt.MapFrom(src => src.OrderDetails))
+                .ForMember(dest => dest.OrderHistories, opt => opt.MapFrom(src => src.OrderHistories));
+            CreateMap<CreateOrderRequest, Order>()
+                .ForMember(dest => dest.OrderNumber, opt => opt.MapFrom(src => "ORD-" + DateTime.Now.Ticks.ToString().Substring(10)))
+                .ForMember(dest => dest.CurrentStatus, opt => opt.MapFrom(src => OrderStatus.Pending))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
+
+
+            // Voucher Mapping (DTO <-> Entity)
+            CreateMap<CreateVoucherRequest, Domain.Entities.Voucher>()
+                 .ForMember(dest => dest.Id, opt => opt.Ignore())
+                 .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => true))
+                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                 // Chuyển bool thành String lưu DB
+                 .ForMember(dest => dest.DiscountType, opt => opt.MapFrom(src => src.IsPercentage ? "PERCENT" : "AMOUNT"));
+
+            CreateMap<UpdateVoucherRequest, Domain.Entities.Voucher>()
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                // Chuyển bool thành String lưu DB
+                .ForMember(dest => dest.DiscountType, opt => opt.MapFrom(src => src.IsPercentage ? "PERCENT" : "AMOUNT"));
+
+            CreateMap<Domain.Entities.Voucher, VoucherResponse>()
+                // Dịch ngược String từ DB ra bool cho Client
+                .ForMember(dest => dest.IsPercentage, opt => opt.MapFrom(src => src.DiscountType == "PERCENT"));
         }
     }
 }
