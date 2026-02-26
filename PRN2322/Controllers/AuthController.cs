@@ -32,14 +32,19 @@ namespace PRN2322.Controllers
                 return BadRequest(ApiResponse<TokenModel>.FailureResponse("Credential is required."));
             }
 
-            var result = await _authService.LoginWithGoogle(request.Credential);
-
-            if (result == null)
+            try
             {
-                return Unauthorized(ApiResponse<TokenModel>.FailureResponse("Invalid Google credential."));
+                var result = await _authService.LoginWithGoogle(request.Credential);
+                if (result == null)
+                {
+                    return Unauthorized(ApiResponse<TokenModel>.FailureResponse("Invalid Google credential or user creation failed."));
+                }
+                return Ok(ApiResponse<TokenModel>.SuccessResponse(result, "Login successful"));
             }
-
-            return Ok(ApiResponse<TokenModel>.SuccessResponse(result, "Login successful"));
+            catch (Exception ex)
+            {
+                return StatusCode(401, ApiResponse<TokenModel>.FailureResponse($"Google Login failed: {ex.Message}"));
+            }
         }
 
         [HttpPost("login")]
@@ -163,23 +168,6 @@ namespace PRN2322.Controllers
             return Ok(ApiResponse<UserResponse>.SuccessResponse(result, "Profile retrieved successfully"));
         }
 
-        // Debug endpoint - XÓA SAU KHI HOÀN THÀNH TEST
-        [HttpGet("debug/check-otp/{email}")]
-        public async Task<ActionResult<ApiResponse<object>>> CheckOtp(string email)
-        {
-            var cacheKey = $"otp:{email}";
-            var otp = await _cache.GetStringAsync(cacheKey);
-            
-            var debugInfo = new
-            {
-                Email = email,
-                CacheKey = cacheKey,
-                Otp = otp ?? "Not found or expired",
-                Exists = otp != null
-            };
-
-            var message = otp != null ? "OTP found in Redis" : "OTP not found or expired (check within 5 minutes after forgot-password request)";
-            return Ok(ApiResponse<object>.SuccessResponse(debugInfo, message));
-        }
+      
     }
 }
