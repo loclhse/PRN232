@@ -91,7 +91,9 @@ namespace Application.Mappings
             // Order Mapping (DTO <-> Entity)
             // Map cho Detail
             CreateMap<CreateOrderDetailRequest, OrderDetail>();
-            CreateMap<OrderDetail, OrderDetailResponse>();
+            CreateMap<OrderDetail, OrderDetailResponse>()
+                // Bổ sung dòng này: Yêu cầu AutoMapper tự nhân số lượng với đơn giá
+                .ForMember(dest => dest.TotalPrice, opt => opt.MapFrom(src => src.Quantity * src.UnitPrice));
 
             // Map cho History
             CreateMap<OrderHistory, OrderHistoryResponse>();
@@ -104,7 +106,6 @@ namespace Application.Mappings
                 .ForMember(dest => dest.OrderNumber, opt => opt.MapFrom(src => "ORD-" + DateTime.Now.Ticks.ToString().Substring(10)))
                 .ForMember(dest => dest.CurrentStatus, opt => opt.MapFrom(src => OrderStatus.Pending))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
-
 
             // Voucher Mapping (DTO <-> Entity)
             CreateMap<CreateVoucherRequest, Domain.Entities.Voucher>()

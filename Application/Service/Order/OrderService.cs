@@ -41,89 +41,184 @@ namespace Application.Service.Order
             var order = _mapper.Map<Domain.Entities.Order>(request);
 
             // ==========================================
-            // KHỐI LOGIC TÍNH TOÁN (BACKEND TỰ XỬ LÝ)
+            // KHỐI 1: TÍNH TOÁN TIỀN VÀ XỬ LÝ VOUCHER
             // ==========================================
 
-            // 1. Tính tổng tiền hàng (TotalAmount) từ danh sách OrderDetails
+            // 1. Tính tổng tiền hàng (TotalAmount)
             order.TotalAmount = request.OrderDetails.Sum(item => item.Quantity * item.UnitPrice);
+            order.DiscountAmount = 0;
 
-            // 2. Tính tiền giảm giá (DiscountAmount)
+            // 2. TỰ ĐỘNG TÍNH PHÍ SHIP Ở BACKEND (Hóa đơn >= 500k thì freeship, ngược lại 30k)
+            decimal backendShippingFee = order.TotalAmount >= 500000 ? 0 : 30000;
+
+            // 3. Áp dụng logic Voucher
             if (request.VoucherId.HasValue)
             {
-                // TODO: Mốt bạn gọi _unitOfWork.VoucherRepository để check logic giảm giá ở đây
-                // Tạm thời hardcode nếu có voucher thì giảm 10% (ví dụ)
-                order.DiscountAmount = order.TotalAmount * 0.1m;
-            }
-            else
-            {
-                order.DiscountAmount = 0;
+                var repoVoucher = _unitOfWork.Repository<Domain.Entities.Voucher>();
+                var voucher = await repoVoucher.GetByIdAsync(request.VoucherId.Value);
+
+                if (voucher == null)
+                    throw new Exception("Voucher không tồn tại!");
+                if (!voucher.IsActive || voucher.EndDate < DateTime.UtcNow)
+                    throw new Exception("Voucher đã hết hạn hoặc bị vô hiệu hóa!");
+                if (order.TotalAmount < voucher.MinOrderValue)
+                    throw new Exception($"Đơn hàng chưa đạt giá trị tối thiểu ({voucher.MinOrderValue}đ) để áp dụng voucher này!");
+                if (voucher.UsageLimit <= 0)
+                    throw new Exception("Voucher này đã hết lượt sử dụng!");
+
+                if (voucher.DiscountType == "PERCENT")
+                {
+                    decimal calculatedDiscount = order.TotalAmount * (voucher.Value / 100);
+                    order.DiscountAmount = voucher.MaxDiscountAmount.HasValue
+                        ? Math.Min(calculatedDiscount, voucher.MaxDiscountAmount.Value)
+                        : calculatedDiscount;
+                }
+                else
+                {
+                    order.DiscountAmount = voucher.Value;
+                }
+
+                voucher.UsageLimit -= 1;
+                repoVoucher.Update(voucher);
             }
 
-            // 3. Tính tiền cuối cùng (FinalAmount)
-            order.FinalAmount = order.TotalAmount - order.DiscountAmount + request.ShippingFee;
+            // 4. Tính tiền cuối cùng (Dùng phí ship tự tính, KHÔNG dùng request.ShippingFee nữa)
+            order.FinalAmount = order.TotalAmount - order.DiscountAmount + backendShippingFee;
 
             // ==========================================
+            // KHỐI 2: RẼ NHÁNH TRẠNG THÁI & LƯU DATABASE
+            // ==========================================
+
+            // RẼ NHÁNH 2: Nếu COD -> tự động Confirmed. Nếu Online -> Pending chờ thanh toán
+            order.CurrentStatus = request.PaymentMethod == "COD" ? OrderStatus.Confirmed : OrderStatus.Pending;
 
             await _unitOfWork.OrderRepository.AddAsync(order);
 
-            // Khởi tạo History lần đầu
+            // Khởi tạo History lần đầu với đúng trạng thái tự động
             var history = new OrderHistory
             {
                 Id = Guid.NewGuid(),
                 OrderId = order.Id,
-                Status = OrderStatus.Pending,
-                Note = "Khởi tạo đơn hàng mới",
+                Status = order.CurrentStatus, // Lấy đúng Status vừa được rẽ nhánh ở trên
+                Note = request.PaymentMethod == "COD" ? "Hệ thống tự động xác nhận đơn COD" : "Khởi tạo đơn hàng chờ thanh toán online",
                 ChangedBy = "System",
                 CreatedAt = DateTime.UtcNow
             };
             await _unitOfWork.Repository<OrderHistory>().AddAsync(history);
 
-            // ==========================================
-            //  TẠO BẢN GHI PAYMENT TẠI ĐÂY
-            // ==========================================
+            // Tạo bản ghi PAYMENT
             var payment = new Payment
             {
                 Id = Guid.NewGuid(),
-                OrderId = order.Id, // Gắn Payment này với ID của đơn hàng vừa tạo
-                PaymentMethod = request.PaymentMethod, // Lấy phương thức (VD: "COD", "VNPay") từ Request
-
-                // Nếu là COD thì Pending (chờ thu tiền), nếu thanh toán Online thì WaitingForPayment (chờ quẹt thẻ)
+                OrderId = order.Id,
+                PaymentMethod = request.PaymentMethod,
                 Status = request.PaymentMethod == "COD" ? "Pending" : "WaitingForPayment",
-
-                // Lưu ý quan trọng: Số tiền khách phải thanh toán là FinalAmount (đã cộng ship, trừ voucher)
                 Amount = order.FinalAmount,
-
                 CreatedAt = DateTime.UtcNow
             };
             await _unitOfWork.Repository<Payment>().AddAsync(payment);
-            // ==========================================
 
-            // Lưu tất cả Order, OrderDetails, OrderHistory, và Payment trong 1 Transaction duy nhất
+            // Lưu tất cả trong 1 Transaction
             await _unitOfWork.SaveChangesAsync();
 
-            return _mapper.Map<OrderResponse>(order);
+            // Ánh xạ ra Response
+            var response = _mapper.Map<OrderResponse>(order);
+            response.PaymentMethod = request.PaymentMethod;
+            // Ghi đè lại phí ship thực tế để FE hiển thị đúng những gì Backend đã tính
+            response.ShippingFee = backendShippingFee;
+
+            return response;
         }
 
         public async Task<OrderResponse?> UpdateOrderStatusAsync(Guid id, OrderStatus newStatus)
         {
-            // Cần include OrderDetails và OrderHistories để khi trả về FE có data mới nhất
             var order = await _unitOfWork.OrderRepository.GetFirstOrDefaultAsync(
                 filter: o => o.Id == id && !o.IsDeleted,
-                includeProperties: "OrderDetails,OrderHistories" //
+                includeProperties: "OrderDetails,OrderHistories"
             );
 
             if (order == null) return null;
 
+            // Nếu trạng thái không thay đổi thì không làm gì cả
+            if (order.CurrentStatus == newStatus)
+                return _mapper.Map<OrderResponse>(order);
+
             order.CurrentStatus = newStatus;
             order.UpdatedAt = DateTime.UtcNow;
 
-            // Tự động sinh OrderHistory mới
+            string historyNote = $"Hệ thống cập nhật trạng thái thành: {newStatus}";
+
+            // Lấy thông tin Payment của đơn hàng này để cập nhật trạng thái tiền bạc
+            var paymentRepo = _unitOfWork.Repository<Payment>();
+            var paymentList = await paymentRepo.FindAsync(p => p.OrderId == order.Id);
+            var payment = paymentList.FirstOrDefault();
+
+            // ========================================================
+            // XỬ LÝ LOGIC CHO TỪNG NHÁNH TRẠNG THÁI
+            // ========================================================
+            switch (newStatus)
+            {
+                case OrderStatus.Shipping:
+                    // Bước 5: Đi giao -> Vì bỏ TrackingNumber nên chỉ cần ghi chú đơn giản
+                    historyNote = $"Bắt đầu giao hàng (Mã đơn: {order.OrderNumber}).";
+                    break;
+
+                case OrderStatus.Delivered:
+                    // Nhánh 3: Giao thành công -> Đổi trạng thái thanh toán thành Success
+                    if (payment != null && payment.Status != "Success")
+                    {
+                        payment.Status = "Success";
+                        paymentRepo.Update(payment);
+                    }
+                    historyNote = "Giao hàng thành công. Đã thu tiền.";
+                    break;
+
+                case OrderStatus.Cancelled:
+                    // Nhánh 1: Bị hủy -> Nếu là COD thì Cancel, Online thì Failed
+                    if (payment != null)
+                    {
+                        payment.Status = payment.PaymentMethod == "COD" ? "Cancelled" : "Failed";
+                        paymentRepo.Update(payment);
+                    }
+
+                    // Hoàn trả lại 1 lượt dùng Voucher cho hệ thống
+                    if (order.VoucherId.HasValue)
+                    {
+                        var voucherRepo = _unitOfWork.Repository<Domain.Entities.Voucher>();
+                        var voucher = await voucherRepo.GetByIdAsync(order.VoucherId.Value);
+                        if (voucher != null)
+                        {
+                            voucher.UsageLimit += 1;
+                            voucherRepo.Update(voucher);
+                        }
+                    }
+                    historyNote = "Đơn hàng đã bị hủy.";
+                    break;
+
+                case OrderStatus.Returned:
+                    // Nhánh 4: Boom hàng / Hoàn trả -> Không thu được tiền nên Payment Failed
+                    if (payment != null)
+                    {
+                        payment.Status = "Failed";
+                        paymentRepo.Update(payment);
+                    }
+                    historyNote = "Khách boom hàng / Trả hàng. Giao thất bại.";
+                    break;
+
+                case OrderStatus.Confirmed:
+                case OrderStatus.Processing:
+                    // Các trạng thái này chỉ cần cập nhật chữ (đã cấu hình mặc định ở trên)
+                    break;
+            }
+            // ========================================================
+
+            // Tự động sinh OrderHistory mới để lưu vết
             var history = new OrderHistory
             {
                 Id = Guid.NewGuid(),
                 OrderId = order.Id,
                 Status = newStatus,
-                Note = $"Hệ thống cập nhật trạng thái thành: {newStatus}",
+                Note = historyNote,
                 ChangedBy = "System",
                 CreatedAt = DateTime.UtcNow
             };
