@@ -1,11 +1,11 @@
 using Application.Service;
 using Microsoft.Extensions.Configuration;
-using System.Net;
-using System.Net.Mail;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
 
 namespace Infrastructure.Core
 {
-
     public class MailService : IMailService
     {
         private readonly IConfiguration _configuration;
@@ -17,35 +17,42 @@ namespace Infrastructure.Core
 
         public async Task SendEmailAsync(string toEmail, string subject, string body)
         {
-          
             var smtpServer = _configuration["Email:SmtpHost"] ?? throw new InvalidOperationException("Email:SmtpHost is not configured.");
             var smtpPort = int.Parse(_configuration["Email:SmtpPort"] ?? "587");
             var smtpUsername = _configuration["Email:SmtpUsername"] ?? throw new InvalidOperationException("Email:SmtpUsername is not configured.");
             var smtpPassword = _configuration["Email:SmtpPassword"] ?? throw new InvalidOperationException("Email:SmtpPassword is not configured.");
             
-          
             var fromEmail = _configuration["Email:FromEmail"] ?? smtpUsername;
             var fromName = _configuration["Email:FromName"] ?? "HappyBox";
 
-            using var client = new SmtpClient(smtpServer, smtpPort)
-            {
-             
-                Credentials = new NetworkCredential(smtpUsername, smtpPassword),
-                EnableSsl = true
-            };
+            var email = new MimeMessage();
+            email.From.Add(new MailboxAddress(fromName, fromEmail));
+            email.To.Add(MailboxAddress.Parse(toEmail));
+            email.Subject = subject;
 
-            var mailMessage = new MailMessage
+            var bodyBuilder = new BodyBuilder
             {
-               
-                From = new MailAddress(fromEmail, fromName),
-                Subject = subject,
-                Body = body,
-                IsBodyHtml = true
+                HtmlBody = body
             };
-            mailMessage.To.Add(toEmail);
+            email.Body = bodyBuilder.ToMessageBody();
 
-            await client.SendMailAsync(mailMessage);
+            using var client = new SmtpClient();
+            try
+            {
+                // Render/Cloud environments often need specific SSL/TLS options
+                await client.ConnectAsync(smtpServer, smtpPort, SecureSocketOptions.StartTls);
+                await client.AuthenticateAsync(smtpUsername, smtpPassword);
+                await client.SendAsync(email);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                await client.DisconnectAsync(true);
+                client.Dispose();
+            }
         }
     }
 }
-
