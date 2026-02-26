@@ -1,8 +1,7 @@
 using Application.Service;
 using Microsoft.Extensions.Configuration;
-using MailKit.Net.Smtp;
-using MailKit.Security;
-using MimeKit;
+using SendGrid;
+using SendGrid.Helpers.Mail;
 
 namespace Infrastructure.Core
 {
@@ -17,41 +16,23 @@ namespace Infrastructure.Core
 
         public async Task SendEmailAsync(string toEmail, string subject, string body)
         {
-            var smtpServer = _configuration["Email:SmtpHost"] ?? throw new InvalidOperationException("Email:SmtpHost is not configured.");
-            var smtpPort = int.Parse(_configuration["Email:SmtpPort"] ?? "587");
-            var smtpUsername = _configuration["Email:SmtpUsername"] ?? throw new InvalidOperationException("Email:SmtpUsername is not configured.");
-            var smtpPassword = _configuration["Email:SmtpPassword"] ?? throw new InvalidOperationException("Email:SmtpPassword is not configured.");
-            
-            var fromEmail = _configuration["Email:FromEmail"] ?? smtpUsername;
+            var apiKey = _configuration["Email:SendGridKey"]
+                ?? throw new InvalidOperationException("Email:SendGridKey is not configured.");
+
+            var fromEmail = _configuration["Email:FromEmail"] ?? "hoangloc1908222@gmail.com";
             var fromName = _configuration["Email:FromName"] ?? "HappyBox";
 
-            var email = new MimeMessage();
-            email.From.Add(new MailboxAddress(fromName, fromEmail));
-            email.To.Add(MailboxAddress.Parse(toEmail));
-            email.Subject = subject;
+            var client = new SendGridClient(apiKey);
+            var from = new EmailAddress(fromEmail, fromName);
+            var to = new EmailAddress(toEmail);
+            var msg = MailHelper.CreateSingleEmail(from, to, subject, "", body);
 
-            var bodyBuilder = new BodyBuilder
-            {
-                HtmlBody = body
-            };
-            email.Body = bodyBuilder.ToMessageBody();
+            var response = await client.SendEmailAsync(msg);
 
-            using var client = new SmtpClient();
-            try
+            if (!response.IsSuccessStatusCode)
             {
-                // Render/Cloud environments often need specific SSL/TLS options
-                await client.ConnectAsync(smtpServer, smtpPort, SecureSocketOptions.StartTls);
-                await client.AuthenticateAsync(smtpUsername, smtpPassword);
-                await client.SendAsync(email);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            finally
-            {
-                await client.DisconnectAsync(true);
-                client.Dispose();
+                var errorBody = await response.Body.ReadAsStringAsync();
+                throw new Exception($"Failed to send email via SendGrid. Status: {response.StatusCode}. Error: {errorBody}");
             }
         }
     }
