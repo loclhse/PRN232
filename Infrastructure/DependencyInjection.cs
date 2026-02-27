@@ -17,6 +17,7 @@ using System.Text;
 using Application.Service.Category;
 using Application.Service.Product;
 using Application.Service.Image;
+using Application.Service.User;
 
 namespace Infrastructure
 {
@@ -48,6 +49,7 @@ namespace Infrastructure
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IProductService, ProductService>();
             services.AddScoped<IImageService, ImageService>();
+            services.AddScoped<IUserService, UserService>();
 
             // AutoMapper
             services.AddAutoMapper(cfg => 
