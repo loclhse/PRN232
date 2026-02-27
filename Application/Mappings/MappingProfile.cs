@@ -1,6 +1,7 @@
 ﻿using Application.DTOs.Request;
 using Application.DTOs.Request.Category;
 using Application.DTOs.Request.Image;
+using Application.DTOs.Request.Inventory;
 using Application.DTOs.Request.Order;
 using Application.DTOs.Request.Product;
 using Application.DTOs.Request.Register;
@@ -9,6 +10,7 @@ using Application.DTOs.Request.User;
 using Application.DTOs.Response;
 using Application.DTOs.Response.Auth;
 using Application.DTOs.Response.Image;
+using Application.DTOs.Response.Inventory;
 using Application.DTOs.Response.Order;
 using Application.DTOs.Response.Product;
 using Application.DTOs.Response.Voucher;
@@ -88,6 +90,31 @@ namespace Application.Mappings
             CreateMap<Image, ImageResponse>();
             // Mapping cho Update Image
             CreateMap<UpdateImageRequest, Domain.Entities.Image>();
+
+            // Inventory Mapping (DTO <-> Entity)
+            CreateMap<CreateInventoryRequest, Domain.Entities.Inventory>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
+                .ForMember(dest => dest.LastUpdated, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.Product, opt => opt.Ignore())
+                .ForMember(dest => dest.Transactions, opt => opt.Ignore());
+
+            CreateMap<UpdateInventoryRequest, Domain.Entities.Inventory>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
+                .ForMember(dest => dest.ProductId, opt => opt.Ignore())
+                .ForMember(dest => dest.LastUpdated, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.Product, opt => opt.Ignore())
+                .ForMember(dest => dest.Transactions, opt => opt.Ignore());
+
+            CreateMap<Domain.Entities.Inventory, InventoryResponse>()
+                .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product != null ? src.Product.Name : null));
         }
     }
 }

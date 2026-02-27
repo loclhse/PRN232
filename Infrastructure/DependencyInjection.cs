@@ -3,6 +3,7 @@ using Application.Mappings;
 using Application.Service;
 using Application.Service.Category;
 using Application.Service.Image;
+using Application.Service.InventoryService;
 using Application.Service.Order;
 using Application.Service.Product;
 using AutoMapper;
@@ -54,6 +55,7 @@ namespace Infrastructure
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<IVoucherService, VoucherService>();
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IInventoryService, InventoryService>();
 
             // AutoMapper
             services.AddAutoMapper(cfg => 
