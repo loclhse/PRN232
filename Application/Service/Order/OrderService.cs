@@ -38,25 +38,54 @@ namespace Application.Service.Order
 
         public async Task<OrderResponse> CreateOrderAsync(CreateOrderRequest request)
         {
+            // AutoMapper sẽ map các thông tin cơ bản từ Request sang Order
+            // Lưu ý: Lúc này các chi tiết đơn hàng (OrderDetails) đang có UnitPrice = 0 vì FE không truyền lên
             var order = _mapper.Map<Domain.Entities.Order>(request);
 
-            // ==========================================
-            // KHỐI 1: TÍNH TOÁN TIỀN VÀ XỬ LÝ VOUCHER
-            // ==========================================
+            // =======================================================
+            // KHỐI 1: TÍNH TOÁN TIỀN (BẢO MẬT: LẤY GIÁ TỪ DATABASE)
+            // =======================================================
 
-            // 1. Tính tổng tiền hàng (TotalAmount)
-            order.TotalAmount = request.OrderDetails.Sum(item => item.Quantity * item.UnitPrice);
-            order.DiscountAmount = 0;
+            // 1. Lấy danh sách ID của tất cả sản phẩm mà khách đặt
+            var productIds = request.OrderDetails.Select(x => x.ProductId).ToList();
 
-            // 2. TỰ ĐỘNG TÍNH PHÍ SHIP Ở BACKEND (Hóa đơn >= 500k thì freeship, ngược lại 30k)
+            // 2. Gom thành 1 câu query duy nhất để lấy thông tin các sản phẩm này từ DB (Tối ưu hiệu năng)
+            var productRepo = _unitOfWork.Repository<Domain.Entities.Product>();
+            var productsInDb = await productRepo.FindAsync(p => productIds.Contains(p.Id));
+
+            order.TotalAmount = 0; // Khởi tạo tổng tiền hàng
+
+            // 3. Duyệt qua từng dòng chi tiết đơn hàng để gán giá chuẩn
+            foreach (var detail in order.OrderDetails)
+            {
+                var product = productsInDb.FirstOrDefault(p => p.Id == detail.ProductId);
+                if (product == null)
+                    throw new Exception($"Sản phẩm với ID {detail.ProductId} không tồn tại hoặc đã bị xóa!");
+
+                // Tự động gán giá gốc của product từ Database
+                detail.UnitPrice = product.Price;
+
+                // Cộng dồn vào tổng tiền hàng của đơn
+                order.TotalAmount += (detail.Quantity * detail.UnitPrice);
+            }
+
+            order.DiscountAmount = 0; // Khởi tạo tiền giảm giá
+
+            // =======================================================
+            // KHỐI 2: TỰ ĐỘNG TÍNH PHÍ SHIP Ở BACKEND
+            // =======================================================
+            // Logic: Tổng tiền hàng >= 500k thì Freeship (0đ), ngược lại thu 30k
             decimal backendShippingFee = order.TotalAmount >= 500000 ? 0 : 30000;
 
-            // 3. Áp dụng logic Voucher
+            // =======================================================
+            // KHỐI 3: XỬ LÝ VOUCHER (KIỂM TRA CHẶT CHẼ)
+            // =======================================================
             if (request.VoucherId.HasValue)
             {
                 var repoVoucher = _unitOfWork.Repository<Domain.Entities.Voucher>();
                 var voucher = await repoVoucher.GetByIdAsync(request.VoucherId.Value);
 
+                // Các lớp phòng thủ kiểm tra tính hợp lệ của Voucher
                 if (voucher == null)
                     throw new Exception("Voucher không tồn tại!");
                 if (!voucher.IsActive || voucher.EndDate < DateTime.UtcNow)
@@ -66,47 +95,56 @@ namespace Application.Service.Order
                 if (voucher.UsageLimit <= 0)
                     throw new Exception("Voucher này đã hết lượt sử dụng!");
 
+                // Tính toán số tiền được giảm
                 if (voucher.DiscountType == "PERCENT")
                 {
                     decimal calculatedDiscount = order.TotalAmount * (voucher.Value / 100);
+                    // Dùng Math.Min để không bao giờ giảm vượt quá số tiền tối đa (MaxDiscountAmount)
                     order.DiscountAmount = voucher.MaxDiscountAmount.HasValue
                         ? Math.Min(calculatedDiscount, voucher.MaxDiscountAmount.Value)
                         : calculatedDiscount;
                 }
                 else
                 {
+                    // Giảm tiền mặt trực tiếp
                     order.DiscountAmount = voucher.Value;
                 }
 
+                // Trừ đi 1 lượt sử dụng của Voucher và đánh dấu cần Update
                 voucher.UsageLimit -= 1;
                 repoVoucher.Update(voucher);
             }
 
-            // 4. Tính tiền cuối cùng (Dùng phí ship tự tính, KHÔNG dùng request.ShippingFee nữa)
+            // =======================================================
+            // KHỐI 4: TỔNG KẾT TIỀN & RẼ NHÁNH TRẠNG THÁI
+            // =======================================================
+
+            // Tính tiền khách phải trả cuối cùng
             order.FinalAmount = order.TotalAmount - order.DiscountAmount + backendShippingFee;
 
-            // ==========================================
-            // KHỐI 2: RẼ NHÁNH TRẠNG THÁI & LƯU DATABASE
-            // ==========================================
-
-            // RẼ NHÁNH 2: Nếu COD -> tự động Confirmed. Nếu Online -> Pending chờ thanh toán
+            // [LUỒNG TỰ ĐỘNG]: Nếu COD -> Tự động Confirmed. Nếu Online -> Pending chờ thanh toán
             order.CurrentStatus = request.PaymentMethod == "COD" ? OrderStatus.Confirmed : OrderStatus.Pending;
 
+            // Đưa Order vào danh sách chờ thêm mới
             await _unitOfWork.OrderRepository.AddAsync(order);
 
-            // Khởi tạo History lần đầu với đúng trạng thái tự động
+            // =======================================================
+            // KHỐI 5: LƯU VẾT LỊCH SỬ VÀ TẠO GIAO DỊCH THANH TOÁN
+            // =======================================================
+
+            // Khởi tạo History lần đầu ứng với trạng thái tự động
             var history = new OrderHistory
             {
                 Id = Guid.NewGuid(),
                 OrderId = order.Id,
-                Status = order.CurrentStatus, // Lấy đúng Status vừa được rẽ nhánh ở trên
+                Status = order.CurrentStatus,
                 Note = request.PaymentMethod == "COD" ? "Hệ thống tự động xác nhận đơn COD" : "Khởi tạo đơn hàng chờ thanh toán online",
                 ChangedBy = "System",
                 CreatedAt = DateTime.UtcNow
             };
             await _unitOfWork.Repository<OrderHistory>().AddAsync(history);
 
-            // Tạo bản ghi PAYMENT
+            // Tạo bản ghi lưu giao dịch tiền bạc (PAYMENT)
             var payment = new Payment
             {
                 Id = Guid.NewGuid(),
@@ -118,13 +156,19 @@ namespace Application.Service.Order
             };
             await _unitOfWork.Repository<Payment>().AddAsync(payment);
 
-            // Lưu tất cả trong 1 Transaction
+            // =======================================================
+            // KHỐI 6: COMMIT LƯU DATABASE & TRẢ VỀ RESPONSE
+            // =======================================================
+
+            // Lưu tất cả mọi thứ (Order, OrderDetails, History, Payment, Voucher update) 
+            // trong 1 Transaction an toàn duy nhất
             await _unitOfWork.SaveChangesAsync();
 
-            // Ánh xạ ra Response
+            // Ánh xạ ra Response để trả về cho Frontend
             var response = _mapper.Map<OrderResponse>(order);
+
+            // Ghi đè lại 2 trường này để FE hiển thị đúng dữ liệu thực tế đã xử lý
             response.PaymentMethod = request.PaymentMethod;
-            // Ghi đè lại phí ship thực tế để FE hiển thị đúng những gì Backend đã tính
             response.ShippingFee = backendShippingFee;
 
             return response;

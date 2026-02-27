@@ -2,10 +2,12 @@ using Application.IService;
 using Application.Mappings;
 using Application.Service;
 using Application.Service.Category;
+using Application.Service.Dashboard;
 using Application.Service.Image;
 using Application.Service.InventoryService;
 using Application.Service.Order;
 using Application.Service.Product;
+using Application.Service.User;
 using AutoMapper;
 using Domain.IRepositories;
 using Domain.IUnitOfWork;
@@ -20,7 +22,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Application.Service.User;
 
 namespace Infrastructure
 {
@@ -56,6 +57,7 @@ namespace Infrastructure
             services.AddScoped<IVoucherService, VoucherService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IInventoryService, InventoryService>();
+            services.AddScoped<IDashboardService, DashboardService>();
 
             // AutoMapper
             services.AddAutoMapper(cfg => 
