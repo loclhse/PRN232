@@ -42,6 +42,7 @@ namespace Infrastructure.Core
                     Audience = new List<string> { clientId }
                 };
 
+                credential = credential.Trim().Trim('\"');
                 var payload = await GoogleJsonWebSignature.ValidateAsync(credential, settings);
 
                 var user = await _unitOfWork.UserRepository.GetFirstOrDefaultAsync(
@@ -50,7 +51,7 @@ namespace Infrastructure.Core
 
                 if (user == null)
                 {
-                    // Create new user if not exists
+                   
                     user = _mapper.Map<User>(payload);
                     await _unitOfWork.UserRepository.AddAsync(user);
                 }
@@ -58,7 +59,7 @@ namespace Infrastructure.Core
                 var accessToken = _tokenService.GenerateAccessToken(user);
                 var refreshToken = _tokenService.GenerateRefreshToken();
 
-                // Lưu Refresh Token vào Redis (Hết hạn sau 7 ngày)
+             
                 var cacheKey = $"refreshToken:{user.Email}";
                 await _cache.SetStringAsync(cacheKey, refreshToken, new DistributedCacheEntryOptions
                 {
@@ -82,9 +83,14 @@ namespace Infrastructure.Core
                     }
                 };
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return null;
+                Console.WriteLine($"Google Login Error: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                }
+                throw;
             }
         }
 
@@ -102,7 +108,7 @@ namespace Infrastructure.Core
             var accessToken = _tokenService.GenerateAccessToken(user);
             var refreshToken = _tokenService.GenerateRefreshToken();
 
-            // Lưu Refresh Token vào Redis
+           
             var cacheKey = $"refreshToken:{user.Email}";
             await _cache.SetStringAsync(cacheKey, refreshToken, new DistributedCacheEntryOptions
             {
@@ -129,7 +135,7 @@ namespace Infrastructure.Core
 
         public async Task<bool> Register(RegisterRequest request)
         {
-            // Check if user already exists
+           
             var existingUser = await _unitOfWork.UserRepository.GetFirstOrDefaultAsync(u => u.Username == request.Username || u.Email == request.Email);
             if (existingUser != null) return false;
 
@@ -145,19 +151,19 @@ namespace Infrastructure.Core
             var user = await _unitOfWork.UserRepository.GetFirstOrDefaultAsync(u => u.Email == email);
             if (user == null) return false;
 
-            // Tạo mã OTP 6 chữ số
+         
             var otpCode = new Random().Next(100000, 999999).ToString();
             
-            // Lưu OTP vào Redis (Hết hạn sau 5 phút)
+         
             var cacheKey = $"otp:{email}";
             try
             {
                 await _cache.SetStringAsync(cacheKey, otpCode, new DistributedCacheEntryOptions
                 {
-                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5) // Sửa từ 1 phút thành 5 phút
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5) 
                 });
                 
-                // Verify OTP đã được lưu thành công
+               
                 var savedOtp = await _cache.GetStringAsync(cacheKey);
                 if (savedOtp != otpCode)
                 {
@@ -166,7 +172,7 @@ namespace Infrastructure.Core
             }
             catch (Exception ex)
             {
-                // Log exception khi lưu OTP thất bại
+               
                 throw new InvalidOperationException($"Failed to save OTP to Redis: {ex.Message}", ex);
             }
 
@@ -189,9 +195,7 @@ namespace Infrastructure.Core
             }
             catch (Exception ex)
             {
-                // OTP đã được lưu thành công, nhưng email gửi thất bại
-                // Vẫn return true để không tiết lộ thông tin về user existence
-                // Nhưng có thể log để debug
+               
                 throw new InvalidOperationException($"OTP saved but failed to send email: {ex.Message}", ex);
             }
         }

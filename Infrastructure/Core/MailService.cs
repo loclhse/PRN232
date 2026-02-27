@@ -1,11 +1,10 @@
 using Application.Service;
 using Microsoft.Extensions.Configuration;
-using System.Net;
-using System.Net.Mail;
+using SendGrid;
+using SendGrid.Helpers.Mail;
 
 namespace Infrastructure.Core
 {
-
     public class MailService : IMailService
     {
         private readonly IConfiguration _configuration;
@@ -17,35 +16,24 @@ namespace Infrastructure.Core
 
         public async Task SendEmailAsync(string toEmail, string subject, string body)
         {
-            // Đọc config từ Email section trong appsettings.json
-            var smtpServer = _configuration["Email:SmtpHost"] ?? throw new InvalidOperationException("Email:SmtpHost is not configured.");
-            var smtpPort = int.Parse(_configuration["Email:SmtpPort"] ?? "587");
-            var smtpUsername = _configuration["Email:SmtpUsername"] ?? throw new InvalidOperationException("Email:SmtpUsername is not configured.");
-            var smtpPassword = _configuration["Email:SmtpPassword"] ?? throw new InvalidOperationException("Email:SmtpPassword is not configured.");
-            
-            // Email để hiển thị cho người nhận
-            var fromEmail = _configuration["Email:FromEmail"] ?? smtpUsername;
+            var apiKey = _configuration["Email:SendGridKey"]
+                ?? throw new InvalidOperationException("Email:SendGridKey is not configured.");
+
+            var fromEmail = _configuration["Email:FromEmail"] ?? "hoangloc1908222@gmail.com";
             var fromName = _configuration["Email:FromName"] ?? "HappyBox";
 
-            using var client = new SmtpClient(smtpServer, smtpPort)
-            {
-                // Dùng SmtpUsername và SmtpPassword để xác thực
-                Credentials = new NetworkCredential(smtpUsername, smtpPassword),
-                EnableSsl = true
-            };
+            var client = new SendGridClient(apiKey);
+            var from = new EmailAddress(fromEmail, fromName);
+            var to = new EmailAddress(toEmail);
+            var msg = MailHelper.CreateSingleEmail(from, to, subject, "", body);
 
-            var mailMessage = new MailMessage
-            {
-                // Hiển thị FromEmail và FromName cho người nhận
-                From = new MailAddress(fromEmail, fromName),
-                Subject = subject,
-                Body = body,
-                IsBodyHtml = true
-            };
-            mailMessage.To.Add(toEmail);
+            var response = await client.SendEmailAsync(msg);
 
-            await client.SendMailAsync(mailMessage);
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Body.ReadAsStringAsync();
+                throw new Exception($"Failed to send email via SendGrid. Status: {response.StatusCode}. Error: {errorBody}");
+            }
         }
     }
 }
-
