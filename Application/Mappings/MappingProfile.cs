@@ -1,16 +1,21 @@
-using Application.DTOs.Request;
+﻿using Application.DTOs.Request;
 using Application.DTOs.Request.Category;
 using Application.DTOs.Request.Image;
+using Application.DTOs.Request.Order;
 using Application.DTOs.Request.Product;
 using Application.DTOs.Request.Register;
+using Application.DTOs.Request.Voucher;
 using Application.DTOs.Request.User;
 using Application.DTOs.Response;
 using Application.DTOs.Response.Auth;
 using Application.DTOs.Response.Image;
+using Application.DTOs.Response.Order;
 using Application.DTOs.Response.Product;
+using Application.DTOs.Response.Voucher;
 using AutoMapper;
 using Domain.Constants;
 using Domain.Entities;
+using Domain.Enums;
 
 namespace Application.Mappings
 {
@@ -83,11 +88,6 @@ namespace Application.Mappings
             CreateMap<Image, ImageResponse>();
             // Mapping cho Update Image
             CreateMap<UpdateImageRequest, Domain.Entities.Image>();
-
-            CreateMap<CreateUserRequest, User>()
-                .ForMember(dest => dest.Id, opt => opt.Ignore())
-                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
-                .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive));
         }
     }
 }
