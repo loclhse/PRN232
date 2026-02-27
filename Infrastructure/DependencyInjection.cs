@@ -19,9 +19,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Application.Service.Category;
-using Application.Service.Product;
-using Application.Service.Image;
 using Application.Service.User;
 
 namespace Infrastructure
