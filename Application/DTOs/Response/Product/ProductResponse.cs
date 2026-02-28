@@ -1,3 +1,6 @@
+using Application.DTOs.Response.Image;
+using Application.DTOs.Response.Inventory;
+
 namespace Application.DTOs.Response.Product
 {
     public class ProductResponse
@@ -12,5 +15,7 @@ namespace Application.DTOs.Response.Product
         public string? CategoryName { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+        public List<ImageResponse>? Images { get; set; }
+        public List<InventoryResponse>? Inventories { get; set; }
     }
 }

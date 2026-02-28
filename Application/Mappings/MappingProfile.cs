@@ -1,4 +1,4 @@
-﻿using Application.DTOs.Request;
+using Application.DTOs.Request;
 using Application.DTOs.Request.Category;
 using Application.DTOs.Request.Image;
 using Application.DTOs.Request.Inventory;
@@ -59,7 +59,9 @@ namespace Application.Mappings
                 .ForMember(dest => dest.Images, opt => opt.Ignore());
 
             CreateMap<Product, ProductResponse>()
-                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : null));
+                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : null))
+                .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.Images == null ? null : src.Images.OrderBy(i => i.SortOrder)))
+                .ForMember(dest => dest.Inventories, opt => opt.MapFrom(src => src.Inventories == null ? null : src.Inventories));
 
             // Category Mapping (DTO <-> Entity)
             CreateMap<CreateCategoryRequest, Category>()

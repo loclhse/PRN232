@@ -78,6 +78,8 @@ namespace Infrastructure.Core
                         Email = user.Email,
                         FullName = user.FullName,
                         Username = user.Username,
+                        Phone = user.Phone ?? string.Empty,
+                        Address = user.Address ?? string.Empty,
                         RoleName = user.Role?.RoleName.ToString() ?? "Customer",
                         IsActive = user.IsActive
                     }
@@ -127,6 +129,8 @@ namespace Infrastructure.Core
                     Email = user.Email,
                     FullName = user.FullName,
                     Username = user.Username,
+                    Phone = user.Phone ?? string.Empty,
+                    Address = user.Address ?? string.Empty,
                     RoleName = user.Role?.RoleName.ToString() ?? "Customer",
                     IsActive = user.IsActive
                 }
@@ -208,7 +212,6 @@ namespace Infrastructure.Core
             var cacheKey = $"otp:{request.Email}";
             var savedOtp = await _cache.GetStringAsync(cacheKey);
 
-            // Trim và so sánh OTP để tránh vấn đề với whitespace
             var trimmedSavedOtp = savedOtp?.Trim();
             var trimmedRequestOtp = request.Otp?.Trim();
 
@@ -217,7 +220,6 @@ namespace Infrastructure.Core
                 return false;
             }
 
-            // Xóa OTP ngay sau khi dùng xong
             await _cache.RemoveAsync(cacheKey);
             
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
@@ -246,7 +248,6 @@ namespace Infrastructure.Core
             var newAccessToken = _tokenService.GenerateAccessToken(user);
             var newRefreshToken = _tokenService.GenerateRefreshToken();
 
-            // Cập nhật Refresh Token mới vào Redis
             await _cache.SetStringAsync(cacheKey, newRefreshToken, new DistributedCacheEntryOptions
             {
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(7)

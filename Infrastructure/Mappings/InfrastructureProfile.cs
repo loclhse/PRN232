@@ -23,10 +23,11 @@ namespace Infrastructure.Mappings
             // User Entity -> Claims for JWT
             CreateMap<User, IEnumerable<Claim>>().ConvertUsing(src => new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, src.Id.ToString()),
-                new Claim(ClaimTypes.Email, src.Email),
-                new Claim(ClaimTypes.Name, src.FullName),
+                new Claim(ClaimTypes.NameIdentifier, src.Id.ToString()),                              
+                new Claim(ClaimTypes.Email, src.Email),                                               
+                new Claim(ClaimTypes.Name, src.FullName),                                            
                 new Claim(ClaimTypes.Role, src.Role != null ? src.Role.RoleName.ToString() : "Guest")
+                                            
             });
         }
     }
