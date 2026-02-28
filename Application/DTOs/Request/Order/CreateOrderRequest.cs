@@ -17,6 +17,10 @@ namespace Application.DTOs.Request.Order
 
         public Guid? VoucherId { get; set; }
 
+        [Required]
+        [Phone]
+        public string ShippingPhone { get; set; } = string.Empty;
+
         // Đảm bảo có thông tin địa chỉ để giao hàng
         [Required]
         public string ShippingAddress { get; set; } = string.Empty;

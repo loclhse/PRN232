@@ -27,6 +27,9 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
+# Configuration
+appsettings.json
+
 # Others
 .idea/
 .vscode/
