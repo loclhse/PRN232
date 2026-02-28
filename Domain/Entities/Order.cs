@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Domain.Enums;
 
@@ -21,6 +21,15 @@ namespace Domain.Entities
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal ShippingFee { get; set; }
+        // Đảm bảo có thông tin địa chỉ và SĐT để giao hàng
+        [Required]
+        public string ShippingAddress { get; set; } = string.Empty;
+
+        // === THÊM DÒNG NÀY ===
+        [Required]
+        [Phone] // DataAnnotation giúp kiểm tra định dạng SĐT cơ bản
+        public string ShippingPhone { get; set; } = string.Empty;
+        // =====================
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal FinalAmount { get; set; } // Total - Discount + Shipping

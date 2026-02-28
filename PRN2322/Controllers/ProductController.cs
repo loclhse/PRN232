@@ -21,7 +21,7 @@ namespace PRN2322.Controllers
         /// <summary>
         /// Lấy danh sách tất cả sản phẩm
         /// </summary>
-        [HttpGet("GetAllProducts")]
+        [HttpGet]
         public async Task<ActionResult<ApiResponse<IEnumerable<ProductResponse>>>> GetAllProducts()
         {
             try
@@ -38,7 +38,7 @@ namespace PRN2322.Controllers
         /// <summary>
         /// Lấy thông tin sản phẩm theo ID
         /// </summary>
-        [HttpGet("GetProductById/{id}")]
+        [HttpGet("{id}")]
         public async Task<ActionResult<ApiResponse<ProductResponse>>> GetProductById(Guid id)
         {
             try
@@ -61,7 +61,7 @@ namespace PRN2322.Controllers
         /// <summary>
         /// Tạo sản phẩm mới
         /// </summary>
-        [HttpPost("CreateProduct")]
+        [HttpPost]
         //[Authorize]
         public async Task<ActionResult<ApiResponse<ProductResponse>>> CreateProduct([FromBody] CreateProductRequest request)
         {
@@ -93,7 +93,7 @@ namespace PRN2322.Controllers
         /// <summary>
         /// Cập nhật thông tin sản phẩm
         /// </summary>
-        [HttpPut("UpdateProduct/{id}")]
+        [HttpPut]
         //[Authorize]
         public async Task<ActionResult<ApiResponse<ProductResponse>>> UpdateProduct(Guid id, [FromBody] UpdateProductRequest request)
         {
@@ -127,7 +127,7 @@ namespace PRN2322.Controllers
         /// <summary>
         /// Xóa sản phẩm (soft delete)
         /// </summary>
-        [HttpDelete("DeleteProduct/{id}")]
+        [HttpDelete("{id}")]
         //[Authorize]
         public async Task<ActionResult<ApiResponse>> DeleteProduct(Guid id)
         {
