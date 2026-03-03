@@ -1,5 +1,6 @@
 using Application.DTOs.Request;
 using Application.DTOs.Request.Category;
+using Application.DTOs.Request.GiftBox;
 using Application.DTOs.Request.Image;
 using Application.DTOs.Request.Inventory;
 using Application.DTOs.Request.Order;
@@ -9,6 +10,7 @@ using Application.DTOs.Request.Voucher;
 using Application.DTOs.Request.User;
 using Application.DTOs.Response;
 using Application.DTOs.Response.Auth;
+using Application.DTOs.Response.GiftBox;
 using Application.DTOs.Response.Image;
 using Application.DTOs.Response.Inventory;
 using Application.DTOs.Response.Order;
@@ -155,6 +157,42 @@ namespace Application.Mappings
             CreateMap<Domain.Entities.Voucher, VoucherResponse>()
                 // Đổi chuỗi DB ngược lại thành bool cho FE
                 .ForMember(dest => dest.IsPercentage, opt => opt.MapFrom(src => src.DiscountType == "PERCENT"));
+
+            // =====================================
+            // GiftBox Mapping
+            // =====================================
+            CreateMap<CreateGiftBoxRequest, GiftBox>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
+                .ForMember(dest => dest.Category, opt => opt.Ignore())
+                .ForMember(dest => dest.ComponentConfig, opt => opt.Ignore())
+                .ForMember(dest => dest.BoxComponents, opt => opt.Ignore())
+                .ForMember(dest => dest.OrderDetails, opt => opt.Ignore())
+                .ForMember(dest => dest.Images, opt => opt.Ignore());
+
+            CreateMap<UpdateGiftBoxRequest, GiftBox>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
+                .ForMember(dest => dest.Category, opt => opt.Ignore())
+                .ForMember(dest => dest.ComponentConfig, opt => opt.Ignore())
+                .ForMember(dest => dest.BoxComponents, opt => opt.Ignore())
+                .ForMember(dest => dest.OrderDetails, opt => opt.Ignore())
+                .ForMember(dest => dest.Images, opt => opt.Ignore());
+
+            CreateMap<GiftBox, GiftBoxResponse>()
+                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : null))
+                .ForMember(dest => dest.ComponentConfigName, opt => opt.MapFrom(src => src.ComponentConfig != null ? src.ComponentConfig.Name : null))
+                .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.Images == null ? null : src.Images.OrderBy(i => i.SortOrder)))
+                .ForMember(dest => dest.BoxComponents, opt => opt.MapFrom(src => src.BoxComponents));
+
+            CreateMap<BoxComponent, BoxComponentResponse>()
+                .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product != null ? src.Product.Name : null))
+                .ForMember(dest => dest.ProductSKU, opt => opt.MapFrom(src => src.Product != null ? src.Product.SKU : null))
+                .ForMember(dest => dest.ProductPrice, opt => opt.MapFrom(src => src.Product != null ? src.Product.Price : 0));
         }
     }
 }

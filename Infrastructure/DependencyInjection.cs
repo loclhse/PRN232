@@ -3,6 +3,7 @@ using Application.Mappings;
 using Application.Service;
 using Application.Service.Category;
 using Application.Service.Dashboard;
+using Application.Service.GiftBox;
 using Application.Service.Image;
 using Application.Service.InventoryService;
 using Application.Service.Order;
@@ -53,6 +54,7 @@ namespace Infrastructure
 
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IProductService, ProductService>();
+            services.AddScoped<IGiftBoxService, GiftBoxService>();
             services.AddScoped<IImageService, ImageService>();
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<IVoucherService, VoucherService>();

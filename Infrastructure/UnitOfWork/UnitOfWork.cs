@@ -18,6 +18,7 @@ namespace Infrastructure.UnitOfWork
         private ICategoryRepository? _categoryRepository;
         private IOrderRepository? _orderRepository;
         private IRoleRepository? _roleRepository;
+        private IGiftBoxRepository? _giftBoxRepository;
 
         public UnitOfWork(AppDbContext context)
         {
@@ -66,6 +67,15 @@ namespace Infrastructure.UnitOfWork
             {
                 _roleRepository ??= new RoleRepository(_context);
                 return _roleRepository;
+            }
+        }
+
+        public IGiftBoxRepository GiftBoxRepository
+        {
+            get
+            {
+                _giftBoxRepository ??= new GiftBoxRepository(_context);
+                return _giftBoxRepository;
             }
         }
 
