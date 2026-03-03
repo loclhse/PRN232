@@ -27,7 +27,7 @@ namespace Application.Service.Product
         {
             var products = await _unitOfWork.ProductRepository.FindAsync(
                 filter: p => !p.IsDeleted,
-                includeProperties: "Category"
+                includeProperties: "Category,Images,Inventories"
             );
 
             return _mapper.Map<IEnumerable<ProductResponse>>(products);
@@ -37,7 +37,7 @@ namespace Application.Service.Product
         {
             var product = await _unitOfWork.ProductRepository.GetFirstOrDefaultAsync(
                 filter: p => p.Id == id && !p.IsDeleted,
-                includeProperties: "Category"
+                includeProperties: "Category,Images,Inventories"
             );
 
             if (product == null)
@@ -70,7 +70,7 @@ namespace Application.Service.Product
             // Reload with Category for response
             var createdProduct = await _unitOfWork.ProductRepository.GetFirstOrDefaultAsync(
                 filter: p => p.Id == product.Id,
-                includeProperties: "Category"
+                includeProperties: "Category,Images,Inventories"
             );
 
             return _mapper.Map<ProductResponse>(createdProduct);
@@ -107,7 +107,7 @@ namespace Application.Service.Product
             // Reload with Category for response
             var updatedProduct = await _unitOfWork.ProductRepository.GetFirstOrDefaultAsync(
                 filter: p => p.Id == id,
-                includeProperties: "Category"
+                includeProperties: "Category,Images,Inventories"
             );
 
             return _mapper.Map<ProductResponse>(updatedProduct);
