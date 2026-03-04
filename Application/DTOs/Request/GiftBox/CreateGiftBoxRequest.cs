@@ -23,7 +23,21 @@ namespace Application.DTOs.Request.GiftBox
         [Required]
         public Guid CategoryId { get; set; }
 
+        /// <summary>Optional. Null for custom/customize gift boxes.</summary>
+        public Guid? GiftBoxComponentConfigId { get; set; }
+
+        public List<BoxComponentItemRequest> Items { get; set; } = new List<BoxComponentItemRequest>();
+
+        public List<string> ImageUrls { get; set; } = new List<string>();
+    }
+
+    public class BoxComponentItemRequest
+    {
         [Required]
-        public Guid GiftBoxComponentConfigId { get; set; }
+        public Guid ProductId { get; set; }
+
+        [Required]
+        [Range(1, int.MaxValue, ErrorMessage = "Quantity must be at least 1")]
+        public int Quantity { get; set; }
     }
 }

@@ -9,6 +9,7 @@ namespace Application.Service.GiftBox
     using GiftBoxEntity = Domain.Entities.GiftBox;
     using CategoryEntity = Domain.Entities.Category;
     using GiftBoxComponentConfigEntity = Domain.Entities.GiftBoxComponentConfig;
+    using ImageEntity = Domain.Entities.Image;
 
     public class GiftBoxService : IGiftBoxService
     {
@@ -81,26 +82,121 @@ namespace Application.Service.GiftBox
                 throw new InvalidOperationException($"Category with ID '{request.CategoryId}' not found.");
             }
 
-            // Check if GiftBoxComponentConfig exists
-            var componentConfig = await _unitOfWork.Repository<GiftBoxComponentConfigEntity>().GetByIdAsync(request.GiftBoxComponentConfigId);
-            if (componentConfig == null || componentConfig.IsDeleted)
+            // Validate GiftBoxComponentConfig only when client sends a config id
+            if (request.GiftBoxComponentConfigId.HasValue)
             {
-                throw new InvalidOperationException($"GiftBoxComponentConfig with ID '{request.GiftBoxComponentConfigId}' not found.");
+                var componentConfig = await _unitOfWork.Repository<GiftBoxComponentConfigEntity>().GetByIdAsync(request.GiftBoxComponentConfigId.Value);
+                if (componentConfig == null || componentConfig.IsDeleted)
+                {
+                    throw new InvalidOperationException($"GiftBoxComponentConfig with ID '{request.GiftBoxComponentConfigId}' not found.");
+                }
             }
 
-            var giftBox = _mapper.Map<GiftBoxEntity>(request);
-            giftBox.CreatedAt = DateTime.UtcNow;
+            // Start transaction
+            await _unitOfWork.BeginTransactionAsync();
 
-            await _unitOfWork.GiftBoxRepository.AddAsync(giftBox);
-            await _unitOfWork.SaveChangesAsync();
+            try
+            {
+                // 1. Create GiftBox
+                var giftBox = _mapper.Map<GiftBoxEntity>(request);
+                giftBox.CreatedAt = DateTime.UtcNow;
 
-            // Reload with related entities for response
-            var createdGiftBox = await _unitOfWork.GiftBoxRepository.GetFirstOrDefaultAsync(
-                filter: g => g.Id == giftBox.Id,
-                includeProperties: "Category,ComponentConfig,BoxComponents.Product,Images"
-            );
+                await _unitOfWork.GiftBoxRepository.AddAsync(giftBox);
+                await _unitOfWork.SaveChangesAsync();
 
-            return _mapper.Map<GiftBoxResponse>(createdGiftBox);
+                // 2. Process BoxComponents and update Inventory
+                if (request.Items != null && request.Items.Any())
+                {
+                    foreach (var item in request.Items)
+                    {
+                        // Validate Product exists and is active
+                        var product = await _unitOfWork.ProductRepository.GetFirstOrDefaultAsync(
+                            filter: p => p.Id == item.ProductId && !p.IsDeleted,
+                            includeProperties: "Inventories"
+                        );
+
+                        if (product == null || !product.IsActive)
+                        {
+                            throw new InvalidOperationException($"Product with ID '{item.ProductId}' not found or is inactive.");
+                        }
+
+                        // Check and update Inventory
+                        var inventory = product.Inventories.FirstOrDefault();
+                        if (inventory == null)
+                        {
+                            throw new InvalidOperationException($"No inventory found for Product '{product.Name}' (ID: {product.Id}).");
+                        }
+
+                        if (inventory.Quantity < item.Quantity)
+                        {
+                            throw new InvalidOperationException($"Insufficient stock for Product '{product.Name}'. Available: {inventory.Quantity}, Required: {item.Quantity}.");
+                        }
+
+                        // Deduct inventory
+                        inventory.Quantity -= item.Quantity;
+                        inventory.LastUpdated = DateTime.UtcNow;
+
+                        // Update inventory status based on quantity
+                        if (inventory.Quantity == 0)
+                        {
+                            inventory.Status = Domain.Enums.InventoryStatus.OutOfStock;
+                        }
+                        else if (inventory.Quantity <= inventory.MinStockLevel)
+                        {
+                            inventory.Status = Domain.Enums.InventoryStatus.LowStock;
+                        }
+
+                        _unitOfWork.Repository<Inventory>().Update(inventory);
+
+                        // Create BoxComponent
+                        var boxComponent = new BoxComponent
+                        {
+                            GiftBoxId = giftBox.Id,
+                            ProductId = item.ProductId,
+                            Quantity = item.Quantity,
+                            CreatedAt = DateTime.UtcNow
+                        };
+
+                        await _unitOfWork.Repository<BoxComponent>().AddAsync(boxComponent);
+                    }
+                }
+
+                // 3. Add Images if provided
+                if (request.ImageUrls != null && request.ImageUrls.Any())
+                {
+                    int sortOrder = 0;
+                    foreach (var imageUrl in request.ImageUrls)
+                    {
+                        var image = new ImageEntity
+                        {
+                            Url = imageUrl,
+                            IsMain = sortOrder == 0, // First image is main
+                            SortOrder = sortOrder,
+                            GiftBoxId = giftBox.Id,
+                            CreatedAt = DateTime.UtcNow
+                        };
+
+                        await _unitOfWork.Repository<ImageEntity>().AddAsync(image);
+                        sortOrder++;
+                    }
+                }
+
+                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.CommitTransactionAsync();
+
+                // Reload with related entities for response
+                var createdGiftBox = await _unitOfWork.GiftBoxRepository.GetFirstOrDefaultAsync(
+                    filter: g => g.Id == giftBox.Id,
+                    includeProperties: "Category,ComponentConfig,BoxComponents.Product,Images"
+                );
+
+                return _mapper.Map<GiftBoxResponse>(createdGiftBox);
+            }
+            catch
+            {
+                await _unitOfWork.RollbackTransactionAsync();
+                throw;
+            }
         }
 
         public async Task<GiftBoxResponse?> UpdateGiftBoxAsync(Guid id, UpdateGiftBoxRequest request)
@@ -125,11 +221,18 @@ namespace Application.Service.GiftBox
                 throw new InvalidOperationException($"Category with ID '{request.CategoryId}' not found.");
             }
 
-            // Check if GiftBoxComponentConfig exists
-            var componentConfig = await _unitOfWork.Repository<GiftBoxComponentConfigEntity>().GetByIdAsync(request.GiftBoxComponentConfigId);
-            if (componentConfig == null || componentConfig.IsDeleted)
+            // Validate GiftBoxComponentConfig only when client sends a config id
+            if (request.GiftBoxComponentConfigId.HasValue)
             {
-                throw new InvalidOperationException($"GiftBoxComponentConfig with ID '{request.GiftBoxComponentConfigId}' not found.");
+                var componentConfig = await _unitOfWork.Repository<GiftBoxComponentConfigEntity>().GetByIdAsync(request.GiftBoxComponentConfigId.Value);
+                if (componentConfig == null || componentConfig.IsDeleted)
+                {
+                    throw new InvalidOperationException($"GiftBoxComponentConfig with ID '{request.GiftBoxComponentConfigId}' not found.");
+                }
+            }
+            else
+            {
+                giftBox.GiftBoxComponentConfigId = null;
             }
 
             _mapper.Map(request, giftBox);

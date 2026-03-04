@@ -20,5 +20,8 @@ namespace Domain.Entities
         public string Category { get; set; } = string.Empty; // Wine, Chocolate, Flower, etc.
 
         public bool IsActive { get; set; } = true;
+
+    // 1-1 relationship: 1 GiftBoxComponentConfig chỉ dùng cho 1 GiftBox
+    public virtual GiftBox? GiftBox { get; set; }
     }
 }
