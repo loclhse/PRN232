@@ -19,6 +19,7 @@ namespace Infrastructure.UnitOfWork
         private IOrderRepository? _orderRepository;
         private IRoleRepository? _roleRepository;
         private IGiftBoxRepository? _giftBoxRepository;
+        private IGiftBoxComponentConfigRepository? _giftBoxComponentConfigRepository;
 
         public UnitOfWork(AppDbContext context)
         {
@@ -76,6 +77,15 @@ namespace Infrastructure.UnitOfWork
             {
                 _giftBoxRepository ??= new GiftBoxRepository(_context);
                 return _giftBoxRepository;
+            }
+        }
+
+        public IGiftBoxComponentConfigRepository GiftBoxComponentConfigRepository
+        {
+            get
+            {
+                _giftBoxComponentConfigRepository ??= new GiftBoxComponentConfigRepository(_context);
+                return _giftBoxComponentConfigRepository;
             }
         }
 

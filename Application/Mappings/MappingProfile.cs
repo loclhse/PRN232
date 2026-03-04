@@ -1,6 +1,7 @@
 using Application.DTOs.Request;
 using Application.DTOs.Request.Category;
 using Application.DTOs.Request.GiftBox;
+using Application.DTOs.Request.GiftBoxComponentConfig;
 using Application.DTOs.Request.Image;
 using Application.DTOs.Request.Inventory;
 using Application.DTOs.Request.Order;
@@ -11,6 +12,7 @@ using Application.DTOs.Request.User;
 using Application.DTOs.Response;
 using Application.DTOs.Response.Auth;
 using Application.DTOs.Response.GiftBox;
+using Application.DTOs.Response.GiftBoxComponentConfig;
 using Application.DTOs.Response.Image;
 using Application.DTOs.Response.Inventory;
 using Application.DTOs.Response.Order;
@@ -193,6 +195,28 @@ namespace Application.Mappings
                 .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product != null ? src.Product.Name : null))
                 .ForMember(dest => dest.ProductSKU, opt => opt.MapFrom(src => src.Product != null ? src.Product.SKU : null))
                 .ForMember(dest => dest.ProductPrice, opt => opt.MapFrom(src => src.Product != null ? src.Product.Price : 0));
+
+            // =====================================
+            // GiftBoxComponentConfig Mapping
+            // =====================================
+            CreateMap<CreateGiftBoxComponentConfigRequest, GiftBoxComponentConfig>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
+                .ForMember(dest => dest.GiftBox, opt => opt.Ignore());
+
+            CreateMap<UpdateGiftBoxComponentConfigRequest, GiftBoxComponentConfig>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
+                .ForMember(dest => dest.GiftBox, opt => opt.Ignore());
+
+            CreateMap<GiftBoxComponentConfig, GiftBoxComponentConfigResponse>()
+                .ForMember(dest => dest.GiftBoxId, opt => opt.MapFrom(src => src.GiftBox != null ? src.GiftBox.Id : (Guid?)null))
+                .ForMember(dest => dest.GiftBoxName, opt => opt.MapFrom(src => src.GiftBox != null ? src.GiftBox.Name : null))
+                .ForMember(dest => dest.GiftBoxCode, opt => opt.MapFrom(src => src.GiftBox != null ? src.GiftBox.Code : null));
         }
     }
 }
