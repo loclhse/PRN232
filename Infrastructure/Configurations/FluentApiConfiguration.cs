@@ -63,11 +63,12 @@ namespace Infrastructure.Configurations
                 .HasForeignKey(gb => gb.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // GiftBox - ComponentConfig (1-1)
+            // GiftBox - ComponentConfig (1-1, optional for custom gift boxes)
             modelBuilder.Entity<GiftBox>()
                 .HasOne(gb => gb.ComponentConfig)
-                .WithOne()
+                .WithOne(config => config.GiftBox)
                 .HasForeignKey<GiftBox>(gb => gb.GiftBoxComponentConfigId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Image - Product (nullable)

@@ -12,7 +12,7 @@ namespace Application.DTOs.Response.GiftBox
         public bool IsActive { get; set; }
         public Guid CategoryId { get; set; }
         public string? CategoryName { get; set; }
-        public Guid GiftBoxComponentConfigId { get; set; }
+        public Guid? GiftBoxComponentConfigId { get; set; }
         public string? ComponentConfigName { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }

@@ -23,7 +23,7 @@ namespace Application.DTOs.Request.GiftBox
         [Required]
         public Guid CategoryId { get; set; }
 
-        [Required]
-        public Guid GiftBoxComponentConfigId { get; set; }
+        /// <summary>Optional. Null for custom/customize gift boxes.</summary>
+        public Guid? GiftBoxComponentConfigId { get; set; }
     }
 }
