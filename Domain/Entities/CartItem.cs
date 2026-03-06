@@ -3,21 +3,18 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Entities
 {
-    public class OrderDetail : BaseEntity
+    public class CartItem : BaseEntity
     {
-
-        public Guid OrderId { get; set; }
-
+        public Guid CartId { get; set; }
         public Guid? ProductId { get; set; }
         public Guid? GiftBoxId { get; set; }
-
         public int Quantity { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
-        public decimal UnitPrice { get; set; }
+        public decimal Price { get; set; }
 
-        [ForeignKey("OrderId")]
-        public virtual Order Order { get; set; } = null!;
+        [ForeignKey("CartId")]
+        public virtual Cart Cart { get; set; } = null!;
 
         [ForeignKey("ProductId")]
         public virtual Product? Product { get; set; }

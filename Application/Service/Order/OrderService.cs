@@ -1,4 +1,4 @@
-﻿using Application.DTOs.Request.Order;
+using Application.DTOs.Request.Order;
 using Application.DTOs.Response.Order;
 using AutoMapper;
 using Domain.Entities;
@@ -39,31 +39,50 @@ namespace Application.Service.Order
         public async Task<OrderResponse> CreateOrderAsync(CreateOrderRequest request)
         {
             // AutoMapper sẽ map các thông tin cơ bản từ Request sang Order
-            // Lưu ý: Lúc này các chi tiết đơn hàng (OrderDetails) đang có UnitPrice = 0 vì FE không truyền lên
             var order = _mapper.Map<Domain.Entities.Order>(request);
 
             // =======================================================
             // KHỐI 1: TÍNH TOÁN TIỀN (BẢO MẬT: LẤY GIÁ TỪ DATABASE)
             // =======================================================
 
-            // 1. Lấy danh sách ID của tất cả sản phẩm mà khách đặt
-            var productIds = request.OrderDetails.Select(x => x.ProductId).ToList();
+            // 1. Lấy danh sách ID của tất cả sản phẩm và hộp quà mà khách đặt
+            var productIds = request.OrderDetails.Where(x => x.ProductId.HasValue).Select(x => x.ProductId!.Value).ToList();
+            var giftBoxIds = request.OrderDetails.Where(x => x.GiftBoxId.HasValue).Select(x => x.GiftBoxId!.Value).ToList();
 
-            // 2. Gom thành 1 câu query duy nhất để lấy thông tin các sản phẩm này từ DB (Tối ưu hiệu năng)
-            var productRepo = _unitOfWork.Repository<Domain.Entities.Product>();
-            var productsInDb = await productRepo.FindAsync(p => productIds.Contains(p.Id));
+            // 2. Gom thành các câu query để lấy thông tin từ DB (Tối ưu hiệu năng)
+            var productsInDb = productIds.Any() 
+                ? await _unitOfWork.ProductRepository.FindAsync(p => productIds.Contains(p.Id))
+                : new List<Domain.Entities.Product>();
+                
+            var giftBoxesInDb = giftBoxIds.Any()
+                ? await _unitOfWork.GiftBoxRepository.FindAsync(g => giftBoxIds.Contains(g.Id))
+                : new List<Domain.Entities.GiftBox>();
 
             order.TotalAmount = 0; // Khởi tạo tổng tiền hàng
 
             // 3. Duyệt qua từng dòng chi tiết đơn hàng để gán giá chuẩn
             foreach (var detail in order.OrderDetails)
             {
-                var product = productsInDb.FirstOrDefault(p => p.Id == detail.ProductId);
-                if (product == null)
-                    throw new Exception($"Sản phẩm với ID {detail.ProductId} không tồn tại hoặc đã bị xóa!");
+                if (detail.ProductId.HasValue)
+                {
+                    var product = productsInDb.FirstOrDefault(p => p.Id == detail.ProductId);
+                    if (product == null)
+                        throw new Exception($"Sản phẩm với ID {detail.ProductId} không tồn tại hoặc đã bị xóa!");
 
-                // Tự động gán giá gốc của product từ Database
-                detail.UnitPrice = product.Price;
+                    detail.UnitPrice = product.Price;
+                }
+                else if (detail.GiftBoxId.HasValue)
+                {
+                    var giftBox = giftBoxesInDb.FirstOrDefault(g => g.Id == detail.GiftBoxId);
+                    if (giftBox == null)
+                        throw new Exception($"Hộp quà với ID {detail.GiftBoxId} không tồn tại hoặc đã bị xóa!");
+
+                    detail.UnitPrice = giftBox.BasePrice;
+                }
+                else
+                {
+                    throw new Exception("Mỗi dòng chi tiết đơn hàng phải có ProductId hoặc GiftBoxId!");
+                }
 
                 // Cộng dồn vào tổng tiền hàng của đơn
                 order.TotalAmount += (detail.Quantity * detail.UnitPrice);

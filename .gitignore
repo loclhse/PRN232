@@ -29,6 +29,7 @@ bld/
 
 # Configuration
 appsettings.json
+appsettings.Development.json
 
 # Others
 .idea/

@@ -118,15 +118,54 @@ namespace Infrastructure.Configurations
                 .OnDelete(DeleteBehavior.Cascade);
 
             // =========================================================
-            // SALES
+            // SALES (Cart, Order)
             // =========================================================
 
-            // Order Relationships
+            // Cart - User
+            modelBuilder.Entity<Cart>()
+                .HasOne(c => c.User)
+                .WithMany(u => u.Carts)
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // CartItem - Cart
+            modelBuilder.Entity<CartItem>()
+                .HasOne(ci => ci.Cart)
+                .WithMany(c => c.Items)
+                .HasForeignKey(ci => ci.CartId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // CartItem - Product (optional)
+            modelBuilder.Entity<CartItem>()
+                .HasOne(ci => ci.Product)
+                .WithMany()
+                .HasForeignKey(ci => ci.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // CartItem - GiftBox (optional)
+            modelBuilder.Entity<CartItem>()
+                .HasOne(ci => ci.GiftBox)
+                .WithMany()
+                .HasForeignKey(ci => ci.GiftBoxId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<CartItem>()
+                .Property(ci => ci.Price)
+                .HasPrecision(18, 2);
+
+            // Order - User
             modelBuilder.Entity<Order>()
                 .HasOne(o => o.User)
                 .WithMany(u => u.Orders)
                 .HasForeignKey(o => o.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Order - Cart (optional: order created from cart at checkout)
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.Cart)
+                .WithMany(c => c.Orders)
+                .HasForeignKey(o => o.CartId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             // Precision for Decimal types
             modelBuilder.Entity<OrderDetail>()
@@ -143,7 +182,15 @@ namespace Infrastructure.Configurations
                 .HasOne(od => od.Product)
                 .WithMany(p => p.OrderDetails)
                 .HasForeignKey(od => od.ProductId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<OrderDetail>()
+                .HasOne(od => od.GiftBox)
+                .WithMany(gb => gb.OrderDetails)
+                .HasForeignKey(od => od.GiftBoxId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // OrderHistory - Order
             modelBuilder.Entity<OrderHistory>()

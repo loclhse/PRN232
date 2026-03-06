@@ -1,4 +1,4 @@
-﻿using Application.DTOs.Response.Dashboard;
+using Application.DTOs.Response.Dashboard;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.IUnitOfWork;
@@ -33,12 +33,13 @@ namespace Application.Service.Dashboard
             response.TotalRevenue = orders.Sum(o => o.FinalAmount);
             response.TotalOrders = orders.Count();
 
-            // 3. Tìm Top Sản Phẩm bán chạy nhất
+            // 3. Tìm Top Sản Phẩm bán chạy nhất (chỉ tính dòng có ProductId, bỏ qua GiftBox)
             var allOrderDetails = orders.SelectMany(o => o.OrderDetails).ToList();
-            if (allOrderDetails.Any())
+            var productOrderDetails = allOrderDetails.Where(od => od.ProductId.HasValue).ToList();
+            if (productOrderDetails.Any())
             {
-                var topProductData = allOrderDetails
-                    .GroupBy(od => od.ProductId)
+                var topProductData = productOrderDetails
+                    .GroupBy(od => od.ProductId!.Value)
                     .Select(g => new
                     {
                         ProductId = g.Key,
