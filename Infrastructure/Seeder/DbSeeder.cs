@@ -21,7 +21,7 @@ namespace Infrastructure.Seeder
             modelBuilder.Entity<User>().HasData(
                 new User 
                 { 
-                    Id = Guid.Parse("f0a1b2c3-d4e5-4f6a-8b9c-0d1e2f3a4b5c"), 
+                    Id = Guid.Parse("   "), 
                     Username = "admin", 
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
                     FullName = "System Admin", 

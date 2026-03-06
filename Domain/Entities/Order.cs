@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Domain.Enums;
 
@@ -11,6 +11,7 @@ namespace Domain.Entities
         public string OrderNumber { get; set; } = string.Empty;
 
         public Guid UserId { get; set; }
+        public Guid? CartId { get; set; }
         public Guid? VoucherId { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
@@ -40,6 +41,9 @@ namespace Domain.Entities
 
         [ForeignKey("UserId")]
         public virtual User User { get; set; } = null!;
+
+        [ForeignKey("CartId")]
+        public virtual Cart? Cart { get; set; }
 
         [ForeignKey("VoucherId")]
         public virtual Voucher? Voucher { get; set; }
