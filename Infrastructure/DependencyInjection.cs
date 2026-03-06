@@ -1,6 +1,7 @@
 using Application.IService;
 using Application.Mappings;
 using Application.Service;
+using Application.Service.Cart;
 using Application.Service.Category;
 using Application.Service.Dashboard;
 using Application.Service.GiftBox;
@@ -57,6 +58,7 @@ namespace Infrastructure
             services.AddScoped<IProductService, ProductService>();
             services.AddScoped<IGiftBoxService, GiftBoxService>();
             services.AddScoped<IGiftBoxComponentConfigService, GiftBoxComponentConfigService>();
+            services.AddScoped<ICartService, CartService>();
             services.AddScoped<IImageService, ImageService>();
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<IVoucherService, VoucherService>();

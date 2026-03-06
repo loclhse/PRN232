@@ -20,6 +20,8 @@ namespace Infrastructure.UnitOfWork
         private IRoleRepository? _roleRepository;
         private IGiftBoxRepository? _giftBoxRepository;
         private IGiftBoxComponentConfigRepository? _giftBoxComponentConfigRepository;
+        private ICartRepository? _cartRepository;
+        private ICartItemRepository? _cartItemRepository;
 
         public UnitOfWork(AppDbContext context)
         {
@@ -86,6 +88,24 @@ namespace Infrastructure.UnitOfWork
             {
                 _giftBoxComponentConfigRepository ??= new GiftBoxComponentConfigRepository(_context);
                 return _giftBoxComponentConfigRepository;
+            }
+        }
+
+        public ICartRepository CartRepository
+        {
+            get
+            {
+                _cartRepository ??= new CartRepository(_context);
+                return _cartRepository;
+            }
+        }
+
+        public ICartItemRepository CartItemRepository
+        {
+            get
+            {
+                _cartItemRepository ??= new CartItemRepository(_context);
+                return _cartItemRepository;
             }
         }
 

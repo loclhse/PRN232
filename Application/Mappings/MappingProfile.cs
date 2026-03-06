@@ -11,6 +11,7 @@ using Application.DTOs.Request.Voucher;
 using Application.DTOs.Request.User;
 using Application.DTOs.Response;
 using Application.DTOs.Response.Auth;
+using Application.DTOs.Response.Cart;
 using Application.DTOs.Response.GiftBox;
 using Application.DTOs.Response.GiftBoxComponentConfig;
 using Application.DTOs.Response.Image;
@@ -217,6 +218,28 @@ namespace Application.Mappings
                 .ForMember(dest => dest.GiftBoxId, opt => opt.MapFrom(src => src.GiftBox != null ? src.GiftBox.Id : (Guid?)null))
                 .ForMember(dest => dest.GiftBoxName, opt => opt.MapFrom(src => src.GiftBox != null ? src.GiftBox.Name : null))
                 .ForMember(dest => dest.GiftBoxCode, opt => opt.MapFrom(src => src.GiftBox != null ? src.GiftBox.Code : null));
+
+            // =====================================
+            // Cart Mapping
+            // =====================================
+            CreateMap<Cart, CartResponse>()
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName : string.Empty))
+                .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items.Where(i => !i.IsDeleted)));
+
+            CreateMap<CartItem, CartItemResponse>()
+                .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product != null ? src.Product.Name : null))
+                .ForMember(dest => dest.ProductSKU, opt => opt.MapFrom(src => src.Product != null ? src.Product.SKU : null))
+                .ForMember(dest => dest.ProductImageUrl, opt => opt.MapFrom(src => 
+                    src.Product != null && src.Product.Images != null 
+                        ? src.Product.Images.Where(i => !i.IsDeleted).OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault() 
+                        : null))
+                .ForMember(dest => dest.GiftBoxName, opt => opt.MapFrom(src => src.GiftBox != null ? src.GiftBox.Name : null))
+                .ForMember(dest => dest.GiftBoxCode, opt => opt.MapFrom(src => src.GiftBox != null ? src.GiftBox.Code : null))
+                .ForMember(dest => dest.GiftBoxImageUrl, opt => opt.MapFrom(src => 
+                    src.GiftBox != null && src.GiftBox.Images != null 
+                        ? src.GiftBox.Images.Where(i => !i.IsDeleted).OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault() 
+                        : null))
+                .ForMember(dest => dest.UnitPrice, opt => opt.MapFrom(src => src.Price));
         }
     }
 }
