@@ -1,4 +1,4 @@
-using Application.DTOs.Request.Cart;
+ï»¿using Application.DTOs.Request.Cart;
 using Application.DTOs.Response.Cart;
 using Application.DTOs.Response.Order;
 using AutoMapper;
@@ -30,10 +30,10 @@ namespace Application.Service.Cart
 
         public async Task<CartResponse> GetOrCreateCartAsync(Guid userId)
         {
-            // Tìm cart hi?n có
+            // TÃ¬m cart hi?n cÃ³
             var cart = await _unitOfWork.CartRepository.GetActiveCartByUserIdAsync(userId);
 
-            // N?u ch?a có thì t?o m?i
+            // N?u ch?a cÃ³ thÃ¬ t?o m?i
             if (cart == null)
             {
                 cart = new Domain.Entities.Cart
@@ -45,7 +45,7 @@ namespace Application.Service.Cart
                 await _unitOfWork.CartRepository.AddAsync(cart);
                 await _unitOfWork.SaveChangesAsync();
 
-                // Reload ?? l?y ??y ?? thông tin
+                // Reload ?? l?y ??y ?? thÃ´ng tin
                 cart = await _unitOfWork.CartRepository.GetCartWithItemsAsync(cart.Id);
             }
 
@@ -60,12 +60,7 @@ namespace Application.Service.Cart
                 throw new InvalidOperationException("Must provide either ProductId or GiftBoxId.");
             }
 
-            if (request.ProductId.HasValue && request.GiftBoxId.HasValue)
-            {
-                throw new InvalidOperationException("Cannot add both Product and GiftBox in the same request.");
-            }
-
-            // L?y ho?c t?o cart
+            // Láº¥y hoáº·c táº¡o cart
             var cart = await _unitOfWork.CartRepository.GetActiveCartByUserIdAsync(userId);
             if (cart == null)
             {
@@ -95,7 +90,7 @@ namespace Application.Service.Cart
 
                 unitPrice = product.Price;
 
-                // Check xem ?ã có trong gi? ch?a
+                // Check xem ?Ã£ cÃ³ trong gi? ch?a
                 existingItem = await _unitOfWork.CartItemRepository.GetByCartAndProductAsync(cart.Id, request.ProductId.Value);
             }
             else if (request.GiftBoxId.HasValue)
@@ -112,20 +107,20 @@ namespace Application.Service.Cart
 
                 unitPrice = giftBox.BasePrice;
 
-                // Check xem ?ã có trong gi? ch?a
+                // Check xem ?Ã£ cÃ³ trong gi? ch?a
                 existingItem = await _unitOfWork.CartItemRepository.GetByCartAndGiftBoxAsync(cart.Id, request.GiftBoxId.Value);
             }
 
             if (existingItem != null)
             {
-                // ?ã có trong gi? -> C?p nh?t s? l??ng
+                // ?Ã£ cÃ³ trong gi? -> C?p nh?t s? l??ng
                 existingItem.Quantity += request.Quantity;
                 existingItem.UpdatedAt = DateTime.UtcNow;
                 _unitOfWork.CartItemRepository.Update(existingItem);
             }
             else
             {
-                // Ch?a có -> Thêm m?i
+                // Ch?a cÃ³ -> ThÃªm m?i
                 var newItem = new CartItem
                 {
                     CartId = cart.Id,
@@ -143,7 +138,7 @@ namespace Application.Service.Cart
             _unitOfWork.CartRepository.Update(cart);
             await _unitOfWork.SaveChangesAsync();
 
-            // Reload cart v?i ??y ?? thông tin
+            // Reload cart v?i ??y ?? thÃ´ng tin
             var updatedCart = await _unitOfWork.CartRepository.GetCartWithItemsAsync(cart.Id);
             return _mapper.Map<CartResponse>(updatedCart);
         }
@@ -268,13 +263,13 @@ namespace Application.Service.Cart
 
             try
             {
-                // Tính t?ng ti?n
+                // TÃ­nh t?ng ti?n
                 decimal totalAmount = 0;
                 var orderDetails = new List<OrderDetail>();
 
                 foreach (var item in itemsToCheckout)
                 {
-                    // L?y giá m?i nh?t t? DB (b?o m?t)
+                    // L?y giÃ¡ m?i nh?t t? DB (b?o m?t)
                     decimal currentPrice = 0;
 
                     if (item.ProductId.HasValue)
@@ -328,12 +323,12 @@ namespace Application.Service.Cart
                     });
                 }
 
-                // Tính phí ship
+                // TÃ­nh phÃ­ ship
                 decimal shippingFee = totalAmount >= 500000 ? 0 : 30000;
                 decimal discountAmount = 0;
                 Guid? voucherId = null;
 
-                // X? lý Voucher
+                // X? lÃ½ Voucher
                 if (!string.IsNullOrEmpty(request.VoucherCode))
                 {
                     var voucher = await _unitOfWork.Repository<Voucher>().GetFirstOrDefaultAsync(
@@ -352,7 +347,7 @@ namespace Application.Service.Cart
                     if (voucher.UsageLimit <= 0)
                         throw new InvalidOperationException("Voucher usage limit exceeded.");
 
-                    // Tính discount
+                    // TÃ­nh discount
                     if (voucher.DiscountType == "PERCENT")
                     {
                         discountAmount = totalAmount * (voucher.Value / 100);
@@ -405,14 +400,14 @@ namespace Application.Service.Cart
                 var payment = new Payment
                 {
                     OrderId = order.Id,
-                    PaymentMethod = "COD", // Default COD, có th? m? r?ng sau
+                    PaymentMethod = "COD", // Default COD, cÃ³ th? m? r?ng sau
                     Status = "Pending",
                     Amount = order.FinalAmount,
                     CreatedAt = DateTime.UtcNow
                 };
                 await _unitOfWork.Repository<Payment>().AddAsync(payment);
 
-                // Xóa các items ?ã checkout kh?i cart (soft delete)
+                // XÃ³a cÃ¡c items ?Ã£ checkout kh?i cart (soft delete)
                 foreach (var item in itemsToCheckout)
                 {
                     item.IsDeleted = true;
@@ -423,7 +418,7 @@ namespace Application.Service.Cart
                 await _unitOfWork.SaveChangesAsync();
                 await _unitOfWork.CommitTransactionAsync();
 
-                // Reload order v?i ??y ?? thông tin
+                // Reload order v?i ??y ?? thÃ´ng tin
                 var createdOrder = await _unitOfWork.OrderRepository.GetFirstOrDefaultAsync(
                     filter: o => o.Id == order.Id,
                     includeProperties: "OrderDetails,OrderHistories,User"
