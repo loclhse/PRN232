@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Application.DTOs.Request.GiftBox
 {
@@ -23,7 +23,13 @@ namespace Application.DTOs.Request.GiftBox
         [Required]
         public Guid CategoryId { get; set; }
 
-        /// <summary>Optional. Null for custom/customize gift boxes.</summary>
+        // Null for custom/customize gift boxes
         public Guid? GiftBoxComponentConfigId { get; set; }
+
+        // Nếu null thì không thay đổi, nếu empty thì xóa hết
+        public List<BoxComponentItemRequest>? Items { get; set; }
+
+        // Nếu null thì không thay đổi, nếu empty thì xóa hết
+        public List<string>? ImageUrls { get; set; }
     }
 }

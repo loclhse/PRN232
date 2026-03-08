@@ -202,7 +202,8 @@ namespace Application.Service.GiftBox
         public async Task<GiftBoxResponse?> UpdateGiftBoxAsync(Guid id, UpdateGiftBoxRequest request)
         {
             var giftBox = await _unitOfWork.GiftBoxRepository.GetFirstOrDefaultAsync(
-                filter: g => g.Id == id && !g.IsDeleted
+                filter: g => g.Id == id && !g.IsDeleted,
+                includeProperties: "BoxComponents,Images"
             );
 
             if (giftBox == null)
@@ -235,19 +236,140 @@ namespace Application.Service.GiftBox
                 giftBox.GiftBoxComponentConfigId = null;
             }
 
-            _mapper.Map(request, giftBox);
-            giftBox.UpdatedAt = DateTime.UtcNow;
+            await _unitOfWork.BeginTransactionAsync();
 
-            _unitOfWork.GiftBoxRepository.Update(giftBox);
-            await _unitOfWork.SaveChangesAsync();
+            try
+            {
+                // Update basic info
+                _mapper.Map(request, giftBox);
+                giftBox.UpdatedAt = DateTime.UtcNow;
+                _unitOfWork.GiftBoxRepository.Update(giftBox);
 
-            // Reload with related entities for response
-            var updatedGiftBox = await _unitOfWork.GiftBoxRepository.GetFirstOrDefaultAsync(
-                filter: g => g.Id == id,
-                includeProperties: "Category,ComponentConfig,BoxComponents.Product,Images"
-            );
+                // Update BoxComponents if provided (null = không thay ??i, empty = xóa h?t)
+                if (request.Items != null)
+                {
+                    // Hoàn tr? inventory t? các BoxComponent c?
+                    var existingComponents = giftBox.BoxComponents.Where(bc => !bc.IsDeleted).ToList();
+                    foreach (var oldComponent in existingComponents)
+                    {
+                        var inventory = (await _unitOfWork.Repository<Inventory>().FindAsync(
+                            filter: inv => inv.ProductId == oldComponent.ProductId && !inv.IsDeleted
+                        )).FirstOrDefault();
 
-            return _mapper.Map<GiftBoxResponse>(updatedGiftBox);
+                        if (inventory != null)
+                        {
+                            inventory.Quantity += oldComponent.Quantity;
+                            inventory.LastUpdated = DateTime.UtcNow;
+                            
+                            // Update status
+                            if (inventory.Quantity > inventory.MinStockLevel)
+                                inventory.Status = Domain.Enums.InventoryStatus.InStock;
+                            else if (inventory.Quantity > 0)
+                                inventory.Status = Domain.Enums.InventoryStatus.LowStock;
+
+                            _unitOfWork.Repository<Inventory>().Update(inventory);
+                        }
+
+                        // Soft delete old component
+                        oldComponent.IsDeleted = true;
+                        oldComponent.UpdatedAt = DateTime.UtcNow;
+                        _unitOfWork.Repository<BoxComponent>().Update(oldComponent);
+                    }
+
+                    // Thêm BoxComponents m?i
+                    foreach (var item in request.Items)
+                    {
+                        var product = await _unitOfWork.ProductRepository.GetFirstOrDefaultAsync(
+                            filter: p => p.Id == item.ProductId && !p.IsDeleted,
+                            includeProperties: "Inventories"
+                        );
+
+                        if (product == null || !product.IsActive)
+                        {
+                            throw new InvalidOperationException($"Product with ID '{item.ProductId}' not found or is inactive.");
+                        }
+
+                        var inventory = product.Inventories.FirstOrDefault();
+                        if (inventory == null)
+                        {
+                            throw new InvalidOperationException($"No inventory found for Product '{product.Name}' (ID: {product.Id}).");
+                        }
+
+                        if (inventory.Quantity < item.Quantity)
+                        {
+                            throw new InvalidOperationException($"Insufficient stock for Product '{product.Name}'. Available: {inventory.Quantity}, Required: {item.Quantity}.");
+                        }
+
+                        // Tr? inventory
+                        inventory.Quantity -= item.Quantity;
+                        inventory.LastUpdated = DateTime.UtcNow;
+
+                        if (inventory.Quantity == 0)
+                            inventory.Status = Domain.Enums.InventoryStatus.OutOfStock;
+                        else if (inventory.Quantity <= inventory.MinStockLevel)
+                            inventory.Status = Domain.Enums.InventoryStatus.LowStock;
+
+                        _unitOfWork.Repository<Inventory>().Update(inventory);
+
+                        // T?o BoxComponent m?i
+                        var boxComponent = new BoxComponent
+                        {
+                            GiftBoxId = giftBox.Id,
+                            ProductId = item.ProductId,
+                            Quantity = item.Quantity,
+                            CreatedAt = DateTime.UtcNow
+                        };
+
+                        await _unitOfWork.Repository<BoxComponent>().AddAsync(boxComponent);
+                    }
+                }
+
+                // Update Images if provided (null = không thay ??i, empty = xóa h?t)
+                if (request.ImageUrls != null)
+                {
+                    // Soft delete old images
+                    var existingImages = giftBox.Images.Where(img => !img.IsDeleted).ToList();
+                    foreach (var oldImage in existingImages)
+                    {
+                        oldImage.IsDeleted = true;
+                        oldImage.UpdatedAt = DateTime.UtcNow;
+                        _unitOfWork.Repository<ImageEntity>().Update(oldImage);
+                    }
+
+                    // Add new images
+                    int sortOrder = 0;
+                    foreach (var imageUrl in request.ImageUrls)
+                    {
+                        var image = new ImageEntity
+                        {
+                            Url = imageUrl,
+                            IsMain = sortOrder == 0,
+                            SortOrder = sortOrder,
+                            GiftBoxId = giftBox.Id,
+                            CreatedAt = DateTime.UtcNow
+                        };
+
+                        await _unitOfWork.Repository<ImageEntity>().AddAsync(image);
+                        sortOrder++;
+                    }
+                }
+
+                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.CommitTransactionAsync();
+
+                // Reload with related entities for response
+                var updatedGiftBox = await _unitOfWork.GiftBoxRepository.GetFirstOrDefaultAsync(
+                    filter: g => g.Id == id,
+                    includeProperties: "Category,ComponentConfig,BoxComponents.Product,Images"
+                );
+
+                return _mapper.Map<GiftBoxResponse>(updatedGiftBox);
+            }
+            catch
+            {
+                await _unitOfWork.RollbackTransactionAsync();
+                throw;
+            }
         }
 
         public async Task<bool> DeleteGiftBoxAsync(Guid id)
