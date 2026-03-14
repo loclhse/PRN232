@@ -21,9 +21,9 @@ namespace Infrastructure.Seeder
             modelBuilder.Entity<User>().HasData(
                 new User 
                 { 
-                    Id = Guid.Parse("e9f8c7b6-a5b4-4c3d-2e1f-0a1b2c3d4e5f"), 
+                    Id = Guid.Parse("f0a1b2c3-d4e5-4f6a-8b9c-0d1e2f3a4b5c"), 
                     Username = "admin", 
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+                    PasswordHash = "$2a$12$qY4PyuQWU3I7BV/3lgEg.eFNLY6lBRnUG1QOWwOXUpMhFrD7EMo0O",
                     FullName = "System Admin", 
                     Email = "admin@happybox.vn", 
                     RoleId = RoleIds.Admin,
@@ -34,7 +34,7 @@ namespace Infrastructure.Seeder
                 { 
                     Id = Guid.Parse("e9d8c7b6-a5b4-4c3d-2e1f-0a1b2c3d4e5f"), 
                     Username = "staff", 
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+                    PasswordHash = "$2a$12$qY4PyuQWU3I7BV/3lgEg.eFNLY6lBRnUG1QOWwOXUpMhFrD7EMo0O",
                     FullName = "Nguyen Van Staff", 
                     Email = "staff@happybox.vn", 
                     RoleId = RoleIds.Staff,

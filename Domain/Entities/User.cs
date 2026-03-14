@@ -46,5 +46,6 @@ namespace Domain.Entities
 
         public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
         public virtual ICollection<Cart> Carts { get; set; } = new List<Cart>();
+        public virtual ICollection<GiftBox> GiftBoxes { get; set; } = new List<GiftBox>();
     }
 }
