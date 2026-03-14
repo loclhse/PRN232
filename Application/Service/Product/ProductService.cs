@@ -1,4 +1,4 @@
-using Application.DTOs.Request.Product;
+﻿using Application.DTOs.Request.Product;
 using Application.DTOs.Response.Product;
 using AutoMapper;
 using Domain.Entities;
@@ -48,7 +48,7 @@ namespace Application.Service.Product
 
         public async Task<ProductResponse> CreateProductAsync(CreateProductRequest request)
         {
-            // Check if SKU already exists
+            // 1. Check if SKU already exists 
             var existingProduct = await _unitOfWork.ProductRepository.GetFirstOrDefaultAsync(
                 filter: p => p.SKU == request.SKU && !p.IsDeleted
             );
@@ -56,18 +56,43 @@ namespace Application.Service.Product
             if (existingProduct != null)
                 throw new InvalidOperationException($"Product with SKU '{request.SKU}' already exists.");
 
-            // Check if Category exists
-            var category = await _unitOfWork.Repository<CategoryEntity>().GetByIdAsync(request.CategoryId);
+            // 2. Check if Category exists 
+            var categoryRepo = _unitOfWork.Repository<Domain.Entities.Category>();
+            var category = await categoryRepo.GetByIdAsync(request.CategoryId);
+
             if (category == null || category.IsDeleted)
                 throw new InvalidOperationException($"Category with ID '{request.CategoryId}' not found.");
 
-            var product = _mapper.Map<ProductEntity>(request);
+            // 3. Mapping data
+            var product = _mapper.Map<Domain.Entities.Product>(request);
+            product.Id = Guid.NewGuid();
             product.CreatedAt = DateTime.UtcNow;
 
+            // 4. Handle Images 
+            product.Images = new List<Domain.Entities.Image>();
+            if (request.ImageUrls != null && request.ImageUrls.Any())
+            {
+                int sortOrder = 1; // Khởi tạo thứ tự ảnh
+                foreach (var url in request.ImageUrls)
+                {
+                    product.Images.Add(new Domain.Entities.Image
+                    {
+                        Id = Guid.NewGuid(),
+                        ProductId = product.Id,
+                        Url = url,
+                        // Nếu là ảnh đầu tiên (sortOrder == 1) thì IsMain = true, còn lại là false
+                        IsMain = (sortOrder == 1),
+                        SortOrder = sortOrder++, // Gán xong thì tăng sortOrder lên 1
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+            }
+
+            // 5. save to database
             await _unitOfWork.ProductRepository.AddAsync(product);
             await _unitOfWork.SaveChangesAsync();
 
-            // Reload with Category for response
+            // 6. Reload with Category, Images for response 
             var createdProduct = await _unitOfWork.ProductRepository.GetFirstOrDefaultAsync(
                 filter: p => p.Id == product.Id,
                 includeProperties: "Category,Images,Inventories"
