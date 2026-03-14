@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260313062743_AddUserIdAndIsCustomToGiftBox")]
+    partial class AddUserIdAndIsCustomToGiftBox
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -186,9 +189,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsDraft")
                         .HasColumnType("boolean");
 
                     b.Property<string>("Name")
@@ -685,7 +685,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("d4b8e7a0-0b6b-4e6a-9a0b-9c8d7e6f5a4b"),
-                            CreatedAt = new DateTime(2026, 3, 13, 17, 15, 16, 313, DateTimeKind.Utc).AddTicks(1212),
+                            CreatedAt = new DateTime(2026, 3, 13, 6, 27, 43, 55, DateTimeKind.Utc).AddTicks(2653),
                             Description = "System Administrator",
                             IsDeleted = false,
                             RoleName = "Admin"
@@ -693,7 +693,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("c5a7d6e8-2f1b-4d3c-9b0a-8c7d6e5f4a3b"),
-                            CreatedAt = new DateTime(2026, 3, 13, 17, 15, 16, 313, DateTimeKind.Utc).AddTicks(1217),
+                            CreatedAt = new DateTime(2026, 3, 13, 6, 27, 43, 55, DateTimeKind.Utc).AddTicks(2657),
                             Description = "Staff/Employee",
                             IsDeleted = false,
                             RoleName = "Staff"
@@ -701,7 +701,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("b6a5d4e3-1c2b-4a3d-9e0f-7b6a5c4d3e2f"),
-                            CreatedAt = new DateTime(2026, 3, 13, 17, 15, 16, 313, DateTimeKind.Utc).AddTicks(1219),
+                            CreatedAt = new DateTime(2026, 3, 13, 6, 27, 43, 55, DateTimeKind.Utc).AddTicks(2659),
                             Description = "Registered Customer",
                             IsDeleted = false,
                             RoleName = "Customer"
@@ -709,7 +709,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4a3b-8c9d-0e1f2a3b4c5d"),
-                            CreatedAt = new DateTime(2026, 3, 13, 17, 15, 16, 313, DateTimeKind.Utc).AddTicks(1221),
+                            CreatedAt = new DateTime(2026, 3, 13, 6, 27, 43, 55, DateTimeKind.Utc).AddTicks(2660),
                             Description = "Guest User",
                             IsDeleted = false,
                             RoleName = "Guest"
@@ -784,14 +784,14 @@ namespace Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("f0a1b2c3-d4e5-4f6a-8b9c-0d1e2f3a4b5c"),
+                            Id = new Guid("e9f8c7b6-a5b4-4c3d-2e1f-0a1b2c3d4e5f"),
                             Address = "",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "admin@happybox.vn",
                             FullName = "System Admin",
                             IsActive = true,
                             IsDeleted = false,
-                            PasswordHash = "$2a$11$Q/0mlgudB04akFd9ikcPROVz8jC6f8MoeWxo2Yt3yhd7O88BDGSC.",
+                            PasswordHash = "$2a$11$0sU/wDbbHRv4XwxKLLEyBeNH9JLtjDKs/0wwzj3MMRDy6rjUEBdWu",
                             Phone = "",
                             RoleId = new Guid("d4b8e7a0-0b6b-4e6a-9a0b-9c8d7e6f5a4b"),
                             Username = "admin"
@@ -805,7 +805,7 @@ namespace Infrastructure.Migrations
                             FullName = "Nguyen Van Staff",
                             IsActive = true,
                             IsDeleted = false,
-                            PasswordHash = "$2a$11$vDFqbKnY3QL4ORCoM43bNuP/sRM0hjmcCMIdNwSj2Uc2249l4Zq56",
+                            PasswordHash = "$2a$11$rpby7JsI.bPCfKVyV2Gp0uflj.rBYqd6A0DvK3m87tA4bC5v/G8r.",
                             Phone = "",
                             RoleId = new Guid("c5a7d6e8-2f1b-4d3c-9b0a-8c7d6e5f4a3b"),
                             Username = "staff"

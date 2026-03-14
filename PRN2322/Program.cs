@@ -10,10 +10,10 @@ namespace PRN2322
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+           
             builder.Services.AddControllers();
             
-            // Web Services (CORS, Swagger, etc.)
+            
             builder.Services.AddWebServices();
 
             // Infrastructure Services (DbContext, Repos, etc.)
@@ -40,14 +40,15 @@ namespace PRN2322
                 }
             }
 
-            // Configure the HTTP request pipeline.
-            // Bật Swagger ở mọi môi trường để dễ dàng test trên Render
+            
             app.UseSwagger();
             app.UseSwaggerUI();
 
             app.UseHttpsRedirection();
             
-            app.UseCors("AllowFrontend"); // Phải đặt trước Authentication và Authorization
+            app.UseCors("AllowFrontend"); 
+
+            app.UseStaticFiles();
 
             app.UseAuthentication();
             app.UseAuthorization();

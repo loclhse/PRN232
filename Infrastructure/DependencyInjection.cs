@@ -10,6 +10,8 @@ using Application.Service.Image;
 using Application.Service.InventoryService;
 using Application.Service.Order;
 using Application.Service.Product;
+using Application.Service.Chatbot;
+using Application.Service.User;
 using AutoMapper;
 using Domain.IRepositories;
 using Domain.IUnitOfWork;
@@ -17,6 +19,7 @@ using Infrastructure.Core;
 using Infrastructure.Data;
 using Infrastructure.Mappings;
 using Infrastructure.Repositories;
+using Infrastructure.Services;
 using Infrastructure.UnitOfWork;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +28,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Application.Service.Chatbot;
-using Application.Service.User;
 
 namespace Infrastructure
 {
@@ -66,6 +68,10 @@ namespace Infrastructure
             services.AddScoped<IInventoryService, InventoryService>();
             services.AddScoped<IDashboardService, DashboardService>();
             services.AddScoped<IChatbotService, ChatbotService>();
+            services.AddScoped<ICustomBasketImageService, CustomBasketImageService>();
+
+            // Register background service for cleanup
+            services.AddHostedService<TempFileCleanupService>();
 
             // AutoMapper
             services.AddAutoMapper(cfg => 

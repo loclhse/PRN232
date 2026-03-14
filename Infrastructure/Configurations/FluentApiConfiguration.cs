@@ -71,6 +71,14 @@ namespace Infrastructure.Configurations
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // GiftBox - User (optional: 1 User có N GiftBox custom)
+            modelBuilder.Entity<GiftBox>()
+                .HasOne(gb => gb.User)
+                .WithMany(u => u.GiftBoxes)
+                .HasForeignKey(gb => gb.UserId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // Image - Product (nullable)
             modelBuilder.Entity<Image>()
                 .HasOne(i => i.Product)
