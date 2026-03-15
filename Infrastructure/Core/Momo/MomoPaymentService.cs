@@ -37,16 +37,16 @@ namespace Infrastructure.Core.Momo
             _logger = logger;
         }
 
-        public async Task<MomoPaymentResponse> CreatePaymentAsync(Guid orderId, string? orderInfo = null)
+        public async Task<MomoPaymentResponse> CreatePaymentAsync(Guid orderId, Guid currentUserId, string? orderInfo = null)
         {
             ValidateConfig();
 
             var order = await _unitOfWork.OrderRepository.GetFirstOrDefaultAsync(
-                o => o.Id == orderId && !o.IsDeleted,
-                includeProperties: "Payments");
+            o => o.Id == orderId && o.UserId == currentUserId && !o.IsDeleted,
+            includeProperties: "Payments");
 
             if (order == null)
-                throw new Exception("Không tìm thấy đơn hàng.");
+                throw new UnauthorizedAccessException("Không tìm thấy đơn hàng hoặc bạn không có quyền truy cập.");
 
             var payment = order.Payments
                 .Where(x => !x.IsDeleted && x.PaymentMethod == "MOMO")
@@ -175,16 +175,16 @@ namespace Infrastructure.Core.Momo
             };
         }
 
-        public async Task<MomoPaymentStatusResponse> QueryPaymentStatusAsync(Guid orderId)
+        public async Task<MomoPaymentStatusResponse> QueryPaymentStatusAsync(Guid orderId, Guid currentUserId)
         {
             ValidateConfig();
 
             var order = await _unitOfWork.OrderRepository.GetFirstOrDefaultAsync(
-                o => o.Id == orderId && !o.IsDeleted,
-                includeProperties: "Payments");
+            o => o.Id == orderId && o.UserId == currentUserId && !o.IsDeleted,
+            includeProperties: "Payments");
 
             if (order == null)
-                throw new Exception("Không tìm thấy đơn hàng.");
+                throw new UnauthorizedAccessException("Không tìm thấy đơn hàng hoặc bạn không có quyền truy cập.");
 
             var payment = order.Payments
                 .Where(x => !x.IsDeleted && x.PaymentMethod == "MOMO")
