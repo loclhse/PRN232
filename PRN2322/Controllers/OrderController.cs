@@ -63,6 +63,19 @@ namespace PRN2322.Controllers
             return Ok(ApiResponse<OrderResponse>.SuccessResponse(result, "Cập nhật trạng thái thành công."));
         }
 
+        [HttpGet("user/{userId}")]
+        public async Task<IActionResult> GetOrdersByUserId(Guid userId)
+        {
+            var orders = await _orderService.GetOrdersByUserIdAsync(userId);
+
+            return Ok(new
+            {
+                success = true,
+                message = "Lấy danh sách đơn hàng của người dùng thành công",
+                data = orders
+            });
+        }
+
         [HttpDelete("{id}")]
         public async Task<ActionResult<ApiResponse>> Delete(Guid id)
         {

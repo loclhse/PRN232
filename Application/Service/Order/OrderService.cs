@@ -302,5 +302,18 @@ namespace Application.Service.Order
             _unitOfWork.OrderRepository.Update(order);
             return await _unitOfWork.SaveChangesAsync() > 0;
         }
+
+        public async Task<List<OrderResponse>> GetOrdersByUserIdAsync(Guid userId)
+        {
+            // Truy vấn Database lấy danh sách đơn hàng của User
+            var orders = await _unitOfWork.OrderRepository.FindAsync(
+                filter: o => o.UserId == userId && !o.IsDeleted,
+                orderBy: q => q.OrderByDescending(o => o.CreatedAt), // Đơn mới nhất lên đầu
+                includeProperties: "OrderDetails,OrderHistories"      // Lấy kèm chi tiết và lịch sử
+            );
+
+            // Map sang Response DTO và trả về dạng List
+            return _mapper.Map<List<OrderResponse>>(orders.ToList());
+        }
     }
 }
