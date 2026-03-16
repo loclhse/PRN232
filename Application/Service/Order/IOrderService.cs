@@ -11,5 +11,6 @@ namespace Application.Service.Order
         Task<OrderResponse> CreateOrderAsync(CreateOrderRequest request);
         Task<OrderResponse?> UpdateOrderStatusAsync(Guid id, OrderStatus newStatus);
         Task<bool> DeleteOrderAsync(Guid id);
+        Task<List<OrderResponse>> GetOrdersByUserIdAsync(Guid userId);
     }
 }
