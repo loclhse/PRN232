@@ -8,6 +8,7 @@ using Application.Service.GiftBox;
 using Application.Service.GiftBoxComponentConfig;
 using Application.Service.Image;
 using Application.Service.InventoryService;
+using Application.Service.InventoryTransactionService;
 using Application.Service.Order;
 using Application.Service.Product;
 using Application.Service.Chatbot;
@@ -72,6 +73,7 @@ namespace Infrastructure
             services.AddScoped<IVoucherService, VoucherService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IInventoryService, InventoryService>();
+            services.AddScoped<IInventoryTransactionService, InventoryTransactionService>();
             services.AddScoped<IDashboardService, DashboardService>();
             services.AddScoped<IChatbotService, ChatbotService>();
             services.AddScoped<ICustomBasketImageService, CustomBasketImageService>();
