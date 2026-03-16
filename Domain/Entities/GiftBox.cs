@@ -26,12 +26,12 @@ namespace Domain.Entities
        
         public bool IsDraft { get; set; } = false;
 
-        public Guid CategoryId { get; set; }
+        public Guid? CategoryId { get; set; }
         public Guid? GiftBoxComponentConfigId { get; set; }
         public Guid? UserId { get; set; }
 
         [ForeignKey("CategoryId")]
-        public virtual Category Category { get; set; } = null!;
+        public virtual Category? Category { get; set; } = null!;
 
         [ForeignKey("GiftBoxComponentConfigId")]
         public virtual GiftBoxComponentConfig? ComponentConfig { get; set; }
