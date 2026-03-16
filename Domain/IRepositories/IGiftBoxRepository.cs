@@ -8,5 +8,6 @@ namespace Domain.IRepositories
         Task<bool> CodeExistsAsync(string code, Guid? excludeId = null);
         Task<IEnumerable<GiftBox>> GetByCategoryAsync(Guid categoryId);
         Task<IEnumerable<GiftBox>> GetActiveGiftBoxesAsync();
+        Task<IEnumerable<GiftBox>> GetGiftBoxesByUserIdAsync(Guid userId);
     }
 }

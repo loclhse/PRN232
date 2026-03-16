@@ -18,6 +18,23 @@ namespace PRN2322.Controllers
             _giftBoxService = giftBoxService;
         }
 
+        private Guid GetCurrentUserId()
+        {
+            var userIdClaim =
+                User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ??
+                User.FindFirst("sub")?.Value ??
+                User.FindFirst("userId")?.Value ??
+                User.FindFirst("UserId")?.Value;
+
+            if (string.IsNullOrWhiteSpace(userIdClaim))
+                throw new UnauthorizedAccessException("Không tìm thấy UserId trong JWT.");
+
+            if (!Guid.TryParse(userIdClaim, out var userId))
+                throw new UnauthorizedAccessException("UserId trong JWT không hợp lệ.");
+
+            return userId;
+        }
+
         [HttpGet]
         public async Task<ActionResult<ApiResponse<IEnumerable<GiftBoxResponse>>>> GetAllGiftBoxes()
         {
@@ -44,6 +61,29 @@ namespace PRN2322.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, ApiResponse<IEnumerable<GiftBoxResponse>>.FailureResponse("An error occurred while retrieving active gift boxes.", new List<string> { ex.Message }));
+            }
+        }
+
+        // Lấy danh sách GiftBox của User
+        [Authorize]
+        [HttpGet("user")]
+        public async Task<ActionResult<ApiResponse<IEnumerable<GiftBoxResponse>>>> GetUserGiftBoxes()
+        {
+            try
+            {
+                var currentUserId = GetCurrentUserId();
+                var giftBoxes = await _giftBoxService.GetGiftBoxesByUserIdAsync(currentUserId);
+                return Ok(ApiResponse<IEnumerable<GiftBoxResponse>>.SuccessResponse(giftBoxes, "User GiftBoxes retrieved successfully"));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ApiResponse<IEnumerable<GiftBoxResponse>>.FailureResponse(
+                    "Bạn chưa đăng nhập hoặc token không hợp lệ.",
+                    new List<string> { ex.Message }));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<IEnumerable<GiftBoxResponse>>.FailureResponse("An error occurred while retrieving user gift boxes.", new List<string> { ex.Message }));
             }
         }
 

@@ -189,6 +189,8 @@ namespace Application.Mappings
             CreateMap<GiftBox, GiftBoxResponse>()
                 .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : null))
                 .ForMember(dest => dest.ComponentConfigName, opt => opt.MapFrom(src => src.ComponentConfig != null ? src.ComponentConfig.Name : null))
+                .ForMember(dest => dest.IsCustom, opt => opt.MapFrom(src => src.IsCustom))
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
                 .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.Images == null ? null : src.Images.OrderBy(i => i.SortOrder)))
                 .ForMember(dest => dest.BoxComponents, opt => opt.MapFrom(src => src.BoxComponents));
 

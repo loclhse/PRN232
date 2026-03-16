@@ -67,6 +67,12 @@ namespace Application.Service.GiftBox
             return _mapper.Map<IEnumerable<GiftBoxResponse>>(giftBoxes);
         }
 
+        public async Task<IEnumerable<GiftBoxResponse>> GetGiftBoxesByUserIdAsync(Guid userId)
+        {
+            var giftBoxes = await _unitOfWork.GiftBoxRepository.GetGiftBoxesByUserIdAsync(userId);
+            return _mapper.Map<IEnumerable<GiftBoxResponse>>(giftBoxes);
+        }
+
         public async Task<GiftBoxResponse> CreateGiftBoxAsync(CreateGiftBoxRequest request)
         {
             // Check if Code already exists
