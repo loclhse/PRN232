@@ -61,6 +61,7 @@ namespace Infrastructure.Configurations
                 .HasOne(gb => gb.Category)
                 .WithMany(c => c.GiftBoxes)
                 .HasForeignKey(gb => gb.CategoryId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // GiftBox - ComponentConfig (1-1, optional for custom gift boxes)
