@@ -214,7 +214,7 @@ namespace Infrastructure.Core
                 IsActive = true,
                 IsCustom = true,
                 IsDraft = true,
-                CategoryId = Guid.Parse("5838db1a-782a-4bb7-bd27-cd34576510b2"),
+                CategoryId = null,
                 UserId = userId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
