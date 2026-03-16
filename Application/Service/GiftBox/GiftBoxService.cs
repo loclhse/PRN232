@@ -10,6 +10,7 @@ namespace Application.Service.GiftBox
     using CategoryEntity = Domain.Entities.Category;
     using GiftBoxComponentConfigEntity = Domain.Entities.GiftBoxComponentConfig;
     using ImageEntity = Domain.Entities.Image;
+    using InventoryTransactionEntity = Domain.Entities.InventoryTransaction;
 
     public class GiftBoxService : IGiftBoxService
     {
@@ -164,6 +165,20 @@ namespace Application.Service.GiftBox
                         };
 
                         await _unitOfWork.Repository<BoxComponent>().AddAsync(boxComponent);
+
+                        // Create InventoryTransaction for CREATE operation (+quantity)
+                        var transaction = new InventoryTransactionEntity
+                        {
+                            InventoryId = inventory.Id,
+                            QuantityChange = -item.Quantity, // Negative because we deducted
+                            TransactionType = "Transfer",
+                            ReferenceId = giftBox.Id.ToString(),
+                            Note = $"GiftBox '{giftBox.Code}' created - Product used",
+                            CreatedBy = "System",
+                            CreatedAt = DateTime.UtcNow
+                        };
+
+                        await _unitOfWork.Repository<InventoryTransactionEntity>().AddAsync(transaction);
                     }
                 }
 
@@ -274,6 +289,20 @@ namespace Application.Service.GiftBox
                                 inventory.Status = Domain.Enums.InventoryStatus.LowStock;
 
                             _unitOfWork.Repository<Inventory>().Update(inventory);
+
+                            // Create InventoryTransaction for returning old quantity
+                            var returnTransaction = new InventoryTransactionEntity
+                            {
+                                InventoryId = inventory.Id,
+                                QuantityChange = +oldComponent.Quantity, // Positive because we returned
+                                TransactionType = "Return",
+                                ReferenceId = giftBox.Id.ToString(),
+                                Note = $"GiftBox '{giftBox.Code}' updated - Product returned",
+                                CreatedBy = "System",
+                                CreatedAt = DateTime.UtcNow
+                            };
+
+                            await _unitOfWork.Repository<InventoryTransactionEntity>().AddAsync(returnTransaction);
                         }
 
                         // Soft delete old component
@@ -327,6 +356,20 @@ namespace Application.Service.GiftBox
                         };
 
                         await _unitOfWork.Repository<BoxComponent>().AddAsync(boxComponent);
+
+                        // Create InventoryTransaction for deducting new quantity
+                        var deductTransaction = new InventoryTransactionEntity
+                        {
+                            InventoryId = inventory.Id,
+                            QuantityChange = -item.Quantity, // Negative because we deducted
+                            TransactionType = "Transfer",
+                            ReferenceId = giftBox.Id.ToString(),
+                            Note = $"GiftBox '{giftBox.Code}' updated - Product used",
+                            CreatedBy = "System",
+                            CreatedAt = DateTime.UtcNow
+                        };
+
+                        await _unitOfWork.Repository<InventoryTransactionEntity>().AddAsync(deductTransaction);
                     }
                 }
 
