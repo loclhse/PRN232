@@ -77,6 +77,37 @@ namespace PRN2322.Controllers
                         new List<string> { ex.Message }));
             }
         }
+
+        [HttpPost("generate-exclusive-details")]
+        public async Task<ActionResult<ApiResponse<string>>> GenerateExclusiveDetails(
+            [FromBody] GenerateExclusiveDetailsRequest request)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrWhiteSpace(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized(ApiResponse<string>.FailureResponse("Không xác định được người dùng từ token."));
+            }
+
+            try
+            {
+                var imagePath = await _customBasketImageService.GenerateExclusiveDetailsAsync(
+                    request,
+                    userId);
+
+                return Ok(ApiResponse<string>.SuccessResponse(imagePath, "Tạo ảnh exclusive details thành công."));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ApiResponse<string>.FailureResponse(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500,
+                    ApiResponse<string>.FailureResponse("Lỗi hệ thống khi tạo ảnh exclusive details.",
+                        new List<string> { ex.Message }));
+            }
+        }
     }
 }
 
