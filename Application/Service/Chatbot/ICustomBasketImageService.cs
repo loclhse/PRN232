@@ -6,6 +6,7 @@ namespace Application.Service.Chatbot
     {
         Task<string> GenerateCustomBasketAsync(CreateCustomBasketRequest request, Guid userId);
         Task<Guid> ConfirmCustomBasketAsync(ConfirmCustomBasketRequest request, Guid userId);
+        Task<string> GenerateExclusiveDetailsAsync(GenerateExclusiveDetailsRequest request, Guid userId);
     }
 }
 

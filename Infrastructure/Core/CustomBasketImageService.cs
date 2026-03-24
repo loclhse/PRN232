@@ -120,7 +120,7 @@ namespace Infrastructure.Core
                 throw new Exception("Failed to decode Base64 image.", ex);
             }
 
-            // Save to temp folder
+          
             var webRootPath = _webHostEnvironment.WebRootPath;
             if (string.IsNullOrWhiteSpace(webRootPath))
                 throw new InvalidOperationException("WebRootPath is not configured. Ensure wwwroot folder exists.");
@@ -133,8 +133,92 @@ namespace Infrastructure.Core
             var filePath = Path.Combine(tempFolder, fileName);
 
             await File.WriteAllBytesAsync(filePath, imageBytes);
+  
+            return $"/images/custom-baskets/temp/{fileName}";
+        }
 
-            // Return URL
+        public async Task<string> GenerateExclusiveDetailsAsync(GenerateExclusiveDetailsRequest request, Guid userId)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (string.IsNullOrWhiteSpace(request.RelativeImagePath))
+                throw new ArgumentException("relativeImagePath là bắt buộc.", nameof(request.RelativeImagePath));
+
+            if (string.IsNullOrWhiteSpace(request.UserPrompt))
+                throw new ArgumentException("userPrompt là bắt buộc.", nameof(request.UserPrompt));
+
+           
+            var fullImageUrl = request.RelativeImagePath;
+            if (!Uri.IsWellFormedUriString(request.RelativeImagePath, UriKind.Absolute))
+            {
+                var baseUrl = _configuration["AppSettings:PublicServerUrl"];
+                if (string.IsNullOrWhiteSpace(baseUrl))
+                    throw new InvalidOperationException("AppSettings:PublicServerUrl is not configured.");
+
+           
+                fullImageUrl = $"{baseUrl.TrimEnd('/')}{request.RelativeImagePath}";
+            }
+
+            var contentList = new List<object>
+            {
+                new { type = "text", text = request.UserPrompt },
+                new
+                {
+                    type = "image_url",
+                    image_url = new { url = fullImageUrl }
+                }
+            };
+
+            var openRouterRequest = new
+            {
+                model = "google/gemini-2.5-flash-image",
+                messages = new[]
+                {
+                    new { role = "user", content = contentList }
+                }
+            };
+
+            var response = await PostToOpenRouter(openRouterRequest);
+            var base64Image = response.GeneratedImageUrl;
+
+            if (string.IsNullOrWhiteSpace(base64Image))
+                throw new Exception("OpenRouter did not return a valid image.");
+
+          
+            var base64Data = base64Image;
+            if (base64Data.StartsWith("data:image/"))
+            {
+                var commaIndex = base64Data.IndexOf(',');
+                if (commaIndex > 0)
+                    base64Data = base64Data.Substring(commaIndex + 1);
+            }
+
+            byte[] imageBytes;
+            try
+            {
+                imageBytes = Convert.FromBase64String(base64Data);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Failed to decode Base64 image.", ex);
+            }
+
+       
+            var webRootPath = _webHostEnvironment.WebRootPath;
+            if (string.IsNullOrWhiteSpace(webRootPath))
+                throw new InvalidOperationException("WebRootPath is not configured. Ensure wwwroot folder exists.");
+
+            var tempFolder = Path.Combine(webRootPath, "images", "custom-baskets", "temp");
+            if (!Directory.Exists(tempFolder))
+                Directory.CreateDirectory(tempFolder);
+
+            var fileName = $"exclusive_detail_{Guid.NewGuid()}.png";
+            var filePath = Path.Combine(tempFolder, fileName);
+
+            await File.WriteAllBytesAsync(filePath, imageBytes);
+
+          
             return $"/images/custom-baskets/temp/{fileName}";
         }
 
