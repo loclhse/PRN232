@@ -10,6 +10,8 @@ namespace Application.DTOs.Response.GiftBox
         public string Description { get; set; } = string.Empty;
         public decimal BasePrice { get; set; }
         public bool IsActive { get; set; }
+        public bool IsCustom { get; set; }
+        public Guid? UserId { get; set; }
         public Guid CategoryId { get; set; }
         public string? CategoryName { get; set; }
         public Guid? GiftBoxComponentConfigId { get; set; }

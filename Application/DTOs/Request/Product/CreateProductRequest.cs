@@ -22,5 +22,6 @@ namespace Application.DTOs.Request.Product
 
         [Required]
         public Guid CategoryId { get; set; }
+        public List<string> ImageUrls { get; set; } = new List<string>();
     }
 }

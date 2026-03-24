@@ -14,6 +14,7 @@ namespace Domain.IUnitOfWork
         IGiftBoxComponentConfigRepository GiftBoxComponentConfigRepository { get; }
         ICartRepository CartRepository { get; }
         ICartItemRepository CartItemRepository { get; }
+        IInventoryTransactionRepository InventoryTransactionRepository { get; }
 
         // Generic repository method (for other entities if needed)
         IGenericRepository<T> Repository<T>() where T : class;

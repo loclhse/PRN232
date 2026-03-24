@@ -8,10 +8,12 @@ using Application.Service.GiftBox;
 using Application.Service.GiftBoxComponentConfig;
 using Application.Service.Image;
 using Application.Service.InventoryService;
+using Application.Service.InventoryTransactionService;
 using Application.Service.Order;
 using Application.Service.Product;
 using Application.Service.Chatbot;
 using Application.Service.User;
+using Application.Service.MomoPayment;
 using AutoMapper;
 using Domain.IRepositories;
 using Domain.IUnitOfWork;
@@ -21,6 +23,7 @@ using Infrastructure.Mappings;
 using Infrastructure.Repositories;
 using Infrastructure.Services;
 using Infrastructure.UnitOfWork;
+using Infrastructure.Core.Momo;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -39,6 +42,10 @@ namespace Infrastructure
             DbFactory.RegisterContext(services, configuration);
 
             services.AddHttpClient();
+
+            // Cấu hình Momo Payment
+            services.Configure<MomoApiOptions>(configuration.GetSection("MomoAPI"));
+            services.AddScoped<IMomoPaymentService, MomoPaymentService>();
 
             // Cấu hình Redis Cache
             services.AddStackExchangeRedisCache(options =>
@@ -66,6 +73,7 @@ namespace Infrastructure
             services.AddScoped<IVoucherService, VoucherService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IInventoryService, InventoryService>();
+            services.AddScoped<IInventoryTransactionService, InventoryTransactionService>();
             services.AddScoped<IDashboardService, DashboardService>();
             services.AddScoped<IChatbotService, ChatbotService>();
             services.AddScoped<ICustomBasketImageService, CustomBasketImageService>();

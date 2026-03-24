@@ -22,6 +22,7 @@ namespace Infrastructure.UnitOfWork
         private IGiftBoxComponentConfigRepository? _giftBoxComponentConfigRepository;
         private ICartRepository? _cartRepository;
         private ICartItemRepository? _cartItemRepository;
+        private IInventoryTransactionRepository? _inventoryTransactionRepository;
 
         public UnitOfWork(AppDbContext context)
         {
@@ -106,6 +107,15 @@ namespace Infrastructure.UnitOfWork
             {
                 _cartItemRepository ??= new CartItemRepository(_context);
                 return _cartItemRepository;
+            }
+        }
+
+        public IInventoryTransactionRepository InventoryTransactionRepository
+        {
+            get
+            {
+                _inventoryTransactionRepository ??= new InventoryTransactionRepository(_context);
+                return _inventoryTransactionRepository;
             }
         }
 

@@ -50,5 +50,17 @@ namespace Infrastructure.Repositories
                 .Where(g => g.IsActive && !g.IsDeleted)
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<GiftBox>> GetGiftBoxesByUserIdAsync(Guid userId)
+        {
+            return await dbSet
+                .Include(g => g.Category)
+                .Include(g => g.ComponentConfig)
+                .Include(g => g.BoxComponents)
+                    .ThenInclude(bc => bc.Product)
+                .Include(g => g.Images)
+                .Where(g => g.UserId == userId && !g.IsDeleted)
+                .ToListAsync();
+        }
     }
 }

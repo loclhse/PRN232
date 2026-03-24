@@ -4,6 +4,7 @@ using Application.DTOs.Request.GiftBox;
 using Application.DTOs.Request.GiftBoxComponentConfig;
 using Application.DTOs.Request.Image;
 using Application.DTOs.Request.Inventory;
+using Application.DTOs.Request.InventoryTransaction;
 using Application.DTOs.Request.Order;
 using Application.DTOs.Request.Product;
 using Application.DTOs.Request.Register;
@@ -16,6 +17,7 @@ using Application.DTOs.Response.GiftBox;
 using Application.DTOs.Response.GiftBoxComponentConfig;
 using Application.DTOs.Response.Image;
 using Application.DTOs.Response.Inventory;
+using Application.DTOs.Response.InventoryTransaction;
 using Application.DTOs.Response.Order;
 using Application.DTOs.Response.Product;
 using Application.DTOs.Response.Voucher;
@@ -124,6 +126,27 @@ namespace Application.Mappings
                 .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product != null ? src.Product.Name : null));
 
             // =====================================
+            // InventoryTransaction Mapping
+            // =====================================
+            CreateMap<CreateInventoryTransactionRequest, Domain.Entities.InventoryTransaction>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
+                .ForMember(dest => dest.Inventory, opt => opt.Ignore());
+
+            CreateMap<UpdateInventoryTransactionRequest, Domain.Entities.InventoryTransaction>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
+                .ForMember(dest => dest.InventoryId, opt => opt.Ignore())
+                .ForMember(dest => dest.Inventory, opt => opt.Ignore());
+
+            CreateMap<Domain.Entities.InventoryTransaction, InventoryTransactionResponse>()
+                .ForMember(dest => dest.InventoryProductName, opt => opt.MapFrom(src => src.Inventory != null && src.Inventory.Product != null ? src.Inventory.Product.Name : null));
+
+            // =====================================
             // Order Mapping
             // =====================================
             CreateMap<CreateOrderDetailRequest, OrderDetail>();
@@ -189,6 +212,8 @@ namespace Application.Mappings
             CreateMap<GiftBox, GiftBoxResponse>()
                 .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : null))
                 .ForMember(dest => dest.ComponentConfigName, opt => opt.MapFrom(src => src.ComponentConfig != null ? src.ComponentConfig.Name : null))
+                .ForMember(dest => dest.IsCustom, opt => opt.MapFrom(src => src.IsCustom))
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
                 .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.Images == null ? null : src.Images.OrderBy(i => i.SortOrder)))
                 .ForMember(dest => dest.BoxComponents, opt => opt.MapFrom(src => src.BoxComponents));
 
