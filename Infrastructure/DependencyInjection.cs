@@ -3,34 +3,36 @@ using Application.Mappings;
 using Application.Service;
 using Application.Service.Cart;
 using Application.Service.Category;
+using Application.Service.ChangePassword;
+using Application.Service.Chatbot;
+using Application.Service.Chatbot;
 using Application.Service.Dashboard;
 using Application.Service.GiftBox;
 using Application.Service.GiftBoxComponentConfig;
 using Application.Service.Image;
 using Application.Service.InventoryService;
 using Application.Service.InventoryTransactionService;
+using Application.Service.MomoPayment;
 using Application.Service.Order;
 using Application.Service.Product;
-using Application.Service.Chatbot;
+using Application.Service.Security;
 using Application.Service.User;
-using Application.Service.MomoPayment;
 using AutoMapper;
 using Domain.IRepositories;
 using Domain.IUnitOfWork;
 using Infrastructure.Core;
+using Infrastructure.Core.Momo;
 using Infrastructure.Data;
 using Infrastructure.Mappings;
 using Infrastructure.Repositories;
 using Infrastructure.Services;
 using Infrastructure.UnitOfWork;
-using Infrastructure.Core.Momo;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Application.Service.Chatbot;
 
 namespace Infrastructure
 {
@@ -77,7 +79,8 @@ namespace Infrastructure
             services.AddScoped<IDashboardService, DashboardService>();
             services.AddScoped<IChatbotService, ChatbotService>();
             services.AddScoped<ICustomBasketImageService, CustomBasketImageService>();
-
+            services.AddScoped<IChangePasswordService, ChangePasswordService>();
+            services.AddScoped<IPasswordHasher, PasswordHasher>();
             // Register background service for cleanup
             services.AddHostedService<TempFileCleanupService>();
 
