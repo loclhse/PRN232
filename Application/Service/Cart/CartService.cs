@@ -5,6 +5,7 @@ using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.IUnitOfWork;
+using GiftBoxEntity = Domain.Entities.GiftBox;
 
 namespace Application.Service.Cart
 {
@@ -54,10 +55,11 @@ namespace Application.Service.Cart
 
         public async Task<CartResponse> AddToCartAsync(Guid userId, AddToCartRequest request)
         {
-            // Validate request
-            if (!request.ProductId.HasValue && !request.GiftBoxId.HasValue)
+            ValidateCartItemSelection(request.ProductId, request.GiftBoxId);
+
+            if (request.Quantity <= 0)
             {
-                throw new InvalidOperationException("Must provide either ProductId or GiftBoxId.");
+                throw new InvalidOperationException("Quantity must be at least 1.");
             }
 
             // Lấy hoặc tạo cart
@@ -98,20 +100,14 @@ namespace Application.Service.Cart
             }
             else if (request.GiftBoxId.HasValue)
             {
-                // Validate GiftBox
-                var giftBox = await _unitOfWork.GiftBoxRepository.GetFirstOrDefaultAsync(
-                    filter: g => g.Id == request.GiftBoxId.Value && !g.IsDeleted && g.IsActive
-                );
-
-                if (giftBox == null)
-                {
-                    throw new InvalidOperationException($"GiftBox with ID '{request.GiftBoxId}' not found or inactive.");
-                }
+                var giftBox = await GetActiveGiftBoxWithComponentsAsync(request.GiftBoxId.Value);
 
                 unitPrice = giftBox.BasePrice;
 
                 // Check xem ?ã có trong gi? ch?a
                 existingItem = await _unitOfWork.CartItemRepository.GetByCartAndGiftBoxAsync(cart.Id, request.GiftBoxId.Value);
+                var requestedQuantity = (existingItem?.Quantity ?? 0) + request.Quantity;
+                await ValidateGiftBoxStockAsync(giftBox, requestedQuantity);
             }
 
             if (existingItem != null)
@@ -148,6 +144,11 @@ namespace Application.Service.Cart
 
         public async Task<CartResponse?> UpdateCartItemAsync(Guid userId, Guid cartItemId, UpdateCartItemRequest request)
         {
+            if (request.Quantity <= 0)
+            {
+                throw new InvalidOperationException("Quantity must be at least 1.");
+            }
+
             var cart = await _unitOfWork.CartRepository.GetActiveCartByUserIdAsync(userId);
             if (cart == null)
                 return null;
@@ -169,6 +170,15 @@ namespace Application.Service.Cart
 
                 await ValidateProductStockAsync(product.Id, product.Name, request.Quantity);
             }
+            else if (cartItem.GiftBoxId.HasValue)
+            {
+                var giftBox = await GetActiveGiftBoxWithComponentsAsync(cartItem.GiftBoxId.Value);
+                await ValidateGiftBoxStockAsync(giftBox, request.Quantity);
+            }
+            else
+            {
+                throw new InvalidOperationException("Cart item is invalid. Missing ProductId and GiftBoxId.");
+            }
 
             cartItem.Quantity = request.Quantity;
             cartItem.UpdatedAt = DateTime.UtcNow;
@@ -185,17 +195,110 @@ namespace Application.Service.Cart
             return _mapper.Map<CartResponse>(updatedCart);
         }
 
+        private static void ValidateCartItemSelection(Guid? productId, Guid? giftBoxId)
+        {
+            if (!productId.HasValue && !giftBoxId.HasValue)
+            {
+                throw new InvalidOperationException("Please provide either ProductId or GiftBoxId.");
+            }
+
+            if (productId.HasValue && giftBoxId.HasValue)
+            {
+                throw new InvalidOperationException("Please provide only one item type: ProductId or GiftBoxId.");
+            }
+        }
+
+        private async Task<GiftBoxEntity> GetActiveGiftBoxWithComponentsAsync(Guid giftBoxId)
+        {
+            var giftBox = await _unitOfWork.GiftBoxRepository.GetFirstOrDefaultAsync(
+                filter: g => g.Id == giftBoxId && !g.IsDeleted && g.IsActive,
+                includeProperties: "BoxComponents.Product"
+            );
+
+            if (giftBox == null)
+            {
+                throw new InvalidOperationException($"GiftBox with ID '{giftBoxId}' not found or inactive.");
+            }
+
+            return giftBox;
+        }
+
+        private async Task<Inventory?> GetInventoryByProductIdAsync(Guid productId)
+        {
+            return await _unitOfWork.Repository<Inventory>().GetFirstOrDefaultAsync(
+                filter: inv => inv.ProductId == productId && !inv.IsDeleted
+            );
+        }
+
         private async Task ValidateProductStockAsync(Guid productId, string productName, int requestedQuantity)
         {
-            var inventory = (await _unitOfWork.Repository<Inventory>().FindAsync(
-                filter: inv => inv.ProductId == productId && !inv.IsDeleted
-            )).FirstOrDefault();
+            if (requestedQuantity <= 0)
+            {
+                throw new InvalidOperationException("Quantity must be at least 1.");
+            }
 
-            var availableQuantity = inventory?.Quantity ?? 0;
-            if (availableQuantity < requestedQuantity)
+            var inventory = await GetInventoryByProductIdAsync(productId);
+            if (inventory == null)
+            {
+                throw new InvalidOperationException($"Inventory for product '{productName}' is not configured.");
+            }
+
+            if (inventory.Quantity < requestedQuantity)
             {
                 throw new InvalidOperationException(
-                    $"Insufficient stock for product '{productName}'. Available: {availableQuantity}, Requested: {requestedQuantity}"
+                    $"Insufficient stock for product '{productName}'. Available: {inventory.Quantity}, Requested: {requestedQuantity}, Max allowed: {inventory.Quantity}."
+                );
+            }
+        }
+
+        private async Task ValidateGiftBoxStockAsync(GiftBoxEntity giftBox, int requestedQuantity)
+        {
+            if (requestedQuantity <= 0)
+            {
+                throw new InvalidOperationException("Quantity must be at least 1.");
+            }
+
+            var activeComponents = giftBox.BoxComponents
+                .Where(component => !component.IsDeleted)
+                .ToList();
+
+            if (!activeComponents.Any())
+            {
+                throw new InvalidOperationException(
+                    $"GiftBox '{giftBox.Name}' has no components configured to validate inventory."
+                );
+            }
+
+            var componentStocks = new List<(string ProductName, int QuantityPerBox, int AvailableQuantity, int MaxBoxes)>();
+
+            foreach (var component in activeComponents)
+            {
+                if (component.Quantity <= 0)
+                {
+                    var productName = component.Product?.Name ?? component.ProductId.ToString();
+                    throw new InvalidOperationException(
+                        $"GiftBox '{giftBox.Name}' has invalid component quantity for product '{productName}'."
+                    );
+                }
+
+                var inventory = await GetInventoryByProductIdAsync(component.ProductId);
+                var availableQuantity = inventory?.Quantity ?? 0;
+                var maxBoxesByComponent = availableQuantity / component.Quantity;
+                var productDisplayName = component.Product?.Name ?? component.ProductId.ToString();
+
+                componentStocks.Add((productDisplayName, component.Quantity, availableQuantity, maxBoxesByComponent));
+            }
+
+            var limitingComponent = componentStocks
+                .OrderBy(component => component.MaxBoxes)
+                .ThenBy(component => component.AvailableQuantity)
+                .First();
+
+            if (requestedQuantity > limitingComponent.MaxBoxes)
+            {
+                var requiredQuantity = limitingComponent.QuantityPerBox * requestedQuantity;
+                throw new InvalidOperationException(
+                    $"Insufficient stock for GiftBox '{giftBox.Name}'. Limiting component '{limitingComponent.ProductName}' has {limitingComponent.AvailableQuantity} in stock, requires {limitingComponent.QuantityPerBox} per box. Requested: {requestedQuantity} boxes ({requiredQuantity} units), Max allowed: {limitingComponent.MaxBoxes} boxes."
                 );
             }
         }
@@ -310,14 +413,12 @@ namespace Application.Service.Cart
                         }
                         currentPrice = product.Price;
 
-                        // Check inventory
-                        var inventory = (await _unitOfWork.Repository<Inventory>().FindAsync(
-                            filter: inv => inv.ProductId == item.ProductId && !inv.IsDeleted
-                        )).FirstOrDefault();
+                        await ValidateProductStockAsync(product.Id, product.Name, item.Quantity);
 
-                        if (inventory == null || inventory.Quantity < item.Quantity)
+                        var inventory = await GetInventoryByProductIdAsync(item.ProductId.Value);
+                        if (inventory == null)
                         {
-                            throw new InvalidOperationException($"Insufficient stock for product '{product.Name}'. Available: {inventory?.Quantity ?? 0}, Requested: {item.Quantity}");
+                            throw new InvalidOperationException($"Inventory for product '{product.Name}' is not configured.");
                         }
 
                         // Tr? inventory
@@ -332,11 +433,8 @@ namespace Application.Service.Cart
                     }
                     else if (item.GiftBoxId.HasValue)
                     {
-                        var giftBox = await _unitOfWork.GiftBoxRepository.GetByIdAsync(item.GiftBoxId.Value);
-                        if (giftBox == null || giftBox.IsDeleted || !giftBox.IsActive)
-                        {
-                            throw new InvalidOperationException($"GiftBox '{item.GiftBox?.Name ?? item.GiftBoxId.ToString()}' is no longer available.");
-                        }
+                        var giftBox = await GetActiveGiftBoxWithComponentsAsync(item.GiftBoxId.Value);
+                        await ValidateGiftBoxStockAsync(giftBox, item.Quantity);
                         currentPrice = giftBox.BasePrice;
                     }
 

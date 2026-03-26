@@ -36,6 +36,12 @@ namespace PRN2322.Controllers
             return userId;
         }
 
+        private static bool IsStockOrInventoryError(string message)
+        {
+            return message.Contains("Insufficient stock", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("inventory", StringComparison.OrdinalIgnoreCase);
+        }
+
         // Lấy giỏ hàng của user hiện tại
         [HttpGet]
         public async Task<ActionResult<ApiResponse<CartResponse>>> GetCart()
@@ -90,7 +96,11 @@ namespace PRN2322.Controllers
             {
                 var userId = GetCurrentUserId();
                 var cart = await _cartService.AddToCartAsync(userId, request);
-                return Ok(ApiResponse<CartResponse>.SuccessResponse(cart, "Item added to cart successfully"));
+                var successMessage = request.ProductId.HasValue
+                    ? "Product added to cart successfully."
+                    : "GiftBox added to cart successfully.";
+
+                return Ok(ApiResponse<CartResponse>.SuccessResponse(cart, successMessage));
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -98,6 +108,11 @@ namespace PRN2322.Controllers
             }
             catch (InvalidOperationException ex)
             {
+                if (IsStockOrInventoryError(ex.Message))
+                {
+                    return Conflict(ApiResponse<CartResponse>.FailureResponse(ex.Message));
+                }
+
                 return BadRequest(ApiResponse<CartResponse>.FailureResponse(ex.Message));
             }
             catch (Exception ex)
@@ -134,6 +149,11 @@ namespace PRN2322.Controllers
             }
             catch (InvalidOperationException ex)
             {
+                if (IsStockOrInventoryError(ex.Message))
+                {
+                    return Conflict(ApiResponse<CartResponse>.FailureResponse(ex.Message));
+                }
+
                 return BadRequest(ApiResponse<CartResponse>.FailureResponse(ex.Message));
             }
             catch (Exception ex)
@@ -247,6 +267,11 @@ namespace PRN2322.Controllers
             }
             catch (InvalidOperationException ex)
             {
+                if (IsStockOrInventoryError(ex.Message))
+                {
+                    return Conflict(ApiResponse<OrderResponse>.FailureResponse(ex.Message));
+                }
+
                 return BadRequest(ApiResponse<OrderResponse>.FailureResponse(ex.Message));
             }
             catch (Exception ex)
