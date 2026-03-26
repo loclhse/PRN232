@@ -132,6 +132,10 @@ namespace PRN2322.Controllers
             {
                 return Unauthorized(ApiResponse<CartResponse>.FailureResponse(ex.Message));
             }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ApiResponse<CartResponse>.FailureResponse(ex.Message));
+            }
             catch (Exception ex)
             {
                 return StatusCode(500, ApiResponse<CartResponse>.FailureResponse("An error occurred while updating cart item.", new List<string> { ex.Message }));

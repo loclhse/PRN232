@@ -92,6 +92,9 @@ namespace Application.Service.Cart
 
                 // Check xem ?ã có trong gi? ch?a
                 existingItem = await _unitOfWork.CartItemRepository.GetByCartAndProductAsync(cart.Id, request.ProductId.Value);
+
+                var requestedQuantity = (existingItem?.Quantity ?? 0) + request.Quantity;
+                await ValidateProductStockAsync(product.Id, product.Name, requestedQuantity);
             }
             else if (request.GiftBoxId.HasValue)
             {
@@ -156,6 +159,17 @@ namespace Application.Service.Cart
             if (cartItem == null)
                 return null;
 
+            if (cartItem.ProductId.HasValue)
+            {
+                var product = await _unitOfWork.ProductRepository.GetByIdAsync(cartItem.ProductId.Value);
+                if (product == null || product.IsDeleted || !product.IsActive)
+                {
+                    throw new InvalidOperationException($"Product '{cartItem.ProductId}' is no longer available.");
+                }
+
+                await ValidateProductStockAsync(product.Id, product.Name, request.Quantity);
+            }
+
             cartItem.Quantity = request.Quantity;
             cartItem.UpdatedAt = DateTime.UtcNow;
 
@@ -169,6 +183,21 @@ namespace Application.Service.Cart
             // Reload cart
             var updatedCart = await _unitOfWork.CartRepository.GetCartWithItemsAsync(cart.Id);
             return _mapper.Map<CartResponse>(updatedCart);
+        }
+
+        private async Task ValidateProductStockAsync(Guid productId, string productName, int requestedQuantity)
+        {
+            var inventory = (await _unitOfWork.Repository<Inventory>().FindAsync(
+                filter: inv => inv.ProductId == productId && !inv.IsDeleted
+            )).FirstOrDefault();
+
+            var availableQuantity = inventory?.Quantity ?? 0;
+            if (availableQuantity < requestedQuantity)
+            {
+                throw new InvalidOperationException(
+                    $"Insufficient stock for product '{productName}'. Available: {availableQuantity}, Requested: {requestedQuantity}"
+                );
+            }
         }
 
         public async Task<bool> RemoveCartItemAsync(Guid userId, Guid cartItemId)
