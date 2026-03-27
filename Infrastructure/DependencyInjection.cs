@@ -47,6 +47,7 @@ namespace Infrastructure
 
             // Cấu hình Momo Payment
             services.Configure<MomoApiOptions>(configuration.GetSection("MomoAPI"));
+            services.AddScoped<IMomoGatewayClient, MomoGatewayClient>();
             services.AddScoped<IMomoPaymentService, MomoPaymentService>();
 
             // Cấu hình Redis Cache
