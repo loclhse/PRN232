@@ -286,7 +286,7 @@ namespace Application.Service.Order
             string historyNote = $"Hệ thống cập nhật trạng thái thành: {newStatus}";
 
             // Lấy thông tin Payment của đơn hàng này để cập nhật trạng thái tiền bạc
-            var paymentRepo = _unitOfWork.Repository<Payment>();
+            var paymentRepo = _unitOfWork.Repository<Domain.Entities.Payment>();
             var paymentList = await paymentRepo.FindAsync(p => p.OrderId == order.Id);
             var payment = paymentList.FirstOrDefault();
 
@@ -296,12 +296,10 @@ namespace Application.Service.Order
             switch (newStatus)
             {
                 case OrderStatus.Shipping:
-                    // Bước 5: Đi giao -> Vì bỏ TrackingNumber nên chỉ cần ghi chú đơn giản
                     historyNote = $"Bắt đầu giao hàng (Mã đơn: {order.OrderNumber}).";
                     break;
 
                 case OrderStatus.Delivered:
-                    // Nhánh 3: Giao thành công -> Đổi trạng thái thanh toán thành Success
                     if (payment != null && payment.Status != "Success")
                     {
                         payment.Status = "Success";
@@ -311,7 +309,6 @@ namespace Application.Service.Order
                     break;
 
                 case OrderStatus.Cancelled:
-                    // Nhánh 1: Bị hủy -> Nếu là COD thì Cancel, Online thì Failed
                     if (payment != null)
                     {
                         payment.Status = payment.PaymentMethod == "COD" ? "Cancelled" : "Failed";
@@ -329,28 +326,93 @@ namespace Application.Service.Order
                             voucherRepo.Update(voucher);
                         }
                     }
-                    historyNote = "Đơn hàng đã bị hủy.";
+                    historyNote = "Đơn hàng đã bị hủy. Đã hoàn trả voucher và tồn kho.";
                     break;
 
                 case OrderStatus.Returned:
-                    // Nhánh 4: Boom hàng / Hoàn trả -> Không thu được tiền nên Payment Failed
                     if (payment != null)
                     {
                         payment.Status = "Failed";
                         paymentRepo.Update(payment);
                     }
-                    historyNote = "Khách boom hàng / Trả hàng. Giao thất bại.";
+                    historyNote = "Khách boom hàng / Trả hàng. Giao thất bại. Đã hoàn trả tồn kho.";
                     break;
 
                 case OrderStatus.Confirmed:
                 case OrderStatus.Processing:
-                    // Các trạng thái này chỉ cần cập nhật chữ (đã cấu hình mặc định ở trên)
                     break;
+            }
+
+            // ========================================================
+            // BƯỚC MỚI: HOÀN TRẢ TỒN KHO NẾU HỦY HOẶC TRẢ HÀNG
+            // ========================================================
+            if (newStatus == OrderStatus.Returned)
+            {
+                var productsToRestock = new Dictionary<Guid, int>();
+
+                // 1. Bóc tách sản phẩm (Giống hệt logic trừ kho lúc Create Order)
+                foreach (var detail in order.OrderDetails)
+                {
+                    if (detail.ProductId.HasValue)
+                    {
+                        var pId = detail.ProductId.Value;
+                        if (productsToRestock.ContainsKey(pId)) productsToRestock[pId] += detail.Quantity;
+                        else productsToRestock[pId] = detail.Quantity;
+                    }
+                    else if (detail.GiftBoxId.HasValue)
+                    {
+                        var components = await _unitOfWork.Repository<Domain.Entities.BoxComponent>()
+                            .FindAsync(c => c.GiftBoxId == detail.GiftBoxId.Value);
+
+                        foreach (var component in components)
+                        {
+                            var pId = component.ProductId;
+                            var totalToRestock = detail.Quantity * component.Quantity;
+
+                            if (productsToRestock.ContainsKey(pId)) productsToRestock[pId] += totalToRestock;
+                            else productsToRestock[pId] = totalToRestock;
+                        }
+                    }
+                }
+
+                var inventoryRepo = _unitOfWork.Repository<Domain.Entities.Inventory>();
+                var inventoryTxRepo = _unitOfWork.Repository<Domain.Entities.InventoryTransaction>();
+
+                // 2. Cập nhật lại số lượng vào Database
+                foreach (var item in productsToRestock)
+                {
+                    var pId = item.Key;
+                    var qtyToRestock = item.Value;
+
+                    var inventory = await inventoryRepo.GetFirstOrDefaultAsync(i => i.ProductId == pId);
+
+                    if (inventory != null)
+                    {
+                        // CỘNG lại tồn kho
+                        inventory.Quantity += qtyToRestock;
+                        inventoryRepo.Update(inventory);
+
+                        // Ghi lại lịch sử (TransactionType là Return/Restock)
+                        var transaction = new Domain.Entities.InventoryTransaction
+                        {
+                            Id = Guid.NewGuid(),
+                            InventoryId = inventory.Id,
+                            QuantityChange = qtyToRestock, // Số Dương vì là nhập kho
+                            TransactionType = "Return",
+                            ReferenceId = order.Id.ToString(),
+                            Note = newStatus == OrderStatus.Returned
+                                   ? "Hoàn trả kho do khách trả hàng/boom hàng"
+                                   : "Hoàn trả kho do đơn hàng bị hủy",
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        await inventoryTxRepo.AddAsync(transaction);
+                    }
+                }
             }
             // ========================================================
 
             // Tự động sinh OrderHistory mới để lưu vết
-            var history = new OrderHistory
+            var history = new Domain.Entities.OrderHistory
             {
                 Id = Guid.NewGuid(),
                 OrderId = order.Id,
@@ -359,7 +421,7 @@ namespace Application.Service.Order
                 ChangedBy = "System",
                 CreatedAt = DateTime.UtcNow
             };
-            await _unitOfWork.Repository<OrderHistory>().AddAsync(history);
+            await _unitOfWork.Repository<Domain.Entities.OrderHistory>().AddAsync(history);
 
             _unitOfWork.OrderRepository.Update(order);
             await _unitOfWork.SaveChangesAsync();
