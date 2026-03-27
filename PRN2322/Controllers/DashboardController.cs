@@ -79,5 +79,25 @@ namespace PRN2322.Controllers
             var result = await _dashboardService.GetRecentOrdersAsync(limit);
             return Ok(new { success = true, data = result });
         }
+
+
+        // 4. API Danh sách Sản phẩm Bán chạy (Best Sellers)
+        // ==========================================
+        [HttpGet("best-sellers")]
+        public async Task<IActionResult> GetBestSellers([FromQuery] DateTime startDate, [FromQuery] DateTime endDate, [FromQuery] int limit = 5)
+        {
+            if (endDate < startDate)
+                return BadRequest(new { success = false, message = "Ngày kết thúc không được nhỏ hơn ngày bắt đầu." });
+
+            // Ép chuẩn UTC giống các API khác
+            var adjustedStartDate = DateTime.SpecifyKind(startDate.Date, DateTimeKind.Utc);
+            var adjustedEndDate = DateTime.SpecifyKind(endDate.Date.AddDays(1).AddTicks(-1), DateTimeKind.Utc);
+
+            if (limit <= 0) limit = 5;
+            if (limit > 50) limit = 50; // Giới hạn tối đa để tránh request quá lớn
+
+            var result = await _dashboardService.GetBestSellersAsync(adjustedStartDate, adjustedEndDate, limit);
+            return Ok(new { success = true, data = result });
+        }
     }
 }

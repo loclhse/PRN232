@@ -10,5 +10,6 @@ namespace Application.Service.Dashboard
         Task<List<SalesTrendDto>> GetSalesTrendAsync(DateTime startDate, DateTime endDate);
         Task<List<OrderStatusChartDto>> GetOrderStatusPieChartAsync(DateTime startDate, DateTime endDate);
         Task<List<RecentOrderDto>> GetRecentOrdersAsync(int limit);
+        Task<List<BestSellerItemDto>> GetBestSellersAsync(DateTime startDate, DateTime endDate, int limit = 5);
     }
 }
