@@ -41,6 +41,9 @@ namespace Application.Service.Order
             // AutoMapper sẽ map các thông tin cơ bản từ Request sang Order
             var order = _mapper.Map<Domain.Entities.Order>(request);
 
+            if (order.Id == Guid.Empty) order.Id = Guid.NewGuid();
+            order.CreatedAt = DateTime.UtcNow;
+
             // =======================================================
             // KHỐI 1: TÍNH TOÁN TIỀN (BẢO MẬT: LẤY GIÁ TỪ DATABASE)
             // =======================================================
@@ -143,6 +146,77 @@ namespace Application.Service.Order
 
             // [LUỒNG TỰ ĐỘNG]: Nếu COD -> Tự động Confirmed. Nếu Online -> Pending chờ thanh toán
             order.CurrentStatus = request.PaymentMethod == "COD" ? OrderStatus.Confirmed : OrderStatus.Pending;
+
+            // BÓC TÁCH GIỎ QUÀ VÀ TRỪ TỒN KHO (INVENTORY)
+            
+            var requiredProducts = new Dictionary<Guid, int>();
+
+            // 4.1 Bóc tách toàn bộ chi tiết đơn hàng ra thành Product gốc
+            foreach (var detail in request.OrderDetails)
+            {
+                if (detail.ProductId.HasValue)
+                {
+                    var pId = detail.ProductId.Value;
+                    if (requiredProducts.ContainsKey(pId))
+                        requiredProducts[pId] += detail.Quantity;
+                    else
+                        requiredProducts[pId] = detail.Quantity;
+                }
+                else if (detail.GiftBoxId.HasValue)
+                {
+                    // SỬA Ở ĐÂY: Dùng bảng BoxComponent thay vì GiftBoxComponentConfig
+                    var components = await _unitOfWork.Repository<Domain.Entities.BoxComponent>()
+                        .FindAsync(c => c.GiftBoxId == detail.GiftBoxId.Value);
+
+                    foreach (var component in components)
+                    {
+                        var pId = component.ProductId; // Đã có ProductId chuẩn xác
+                        var totalNeeded = detail.Quantity * component.Quantity; // Số lượng hộp * số lượng món trong hộp
+
+                        if (requiredProducts.ContainsKey(pId))
+                            requiredProducts[pId] += totalNeeded;
+                        else
+                            requiredProducts[pId] = totalNeeded;
+                    }
+                }
+            }
+
+            var inventoryRepo = _unitOfWork.Repository<Domain.Entities.Inventory>();
+            var inventoryTransactionRepo = _unitOfWork.Repository<Domain.Entities.InventoryTransaction>();
+
+            // 4.2 Kiểm tra số lượng và tiến hành trừ kho
+            foreach (var item in requiredProducts)
+            {
+                var pId = item.Key;
+                var totalNeeded = item.Value;
+
+                var inventory = await inventoryRepo.GetFirstOrDefaultAsync(i => i.ProductId == pId);
+
+                if (inventory == null || inventory.Quantity < totalNeeded)
+                {
+                    var product = await _unitOfWork.ProductRepository.GetByIdAsync(pId);
+                    var productName = product?.Name ?? pId.ToString();
+                    throw new Exception($"Sản phẩm '{productName}' không đủ số lượng trong kho. Cần: {totalNeeded}, Hiện có: {inventory?.Quantity ?? 0}");
+                }
+
+                // Trừ kho
+                inventory.Quantity -= totalNeeded;
+                inventoryRepo.Update(inventory);
+
+                // Ghi lịch sử biến động kho
+                var transaction = new Domain.Entities.InventoryTransaction
+                {
+                    Id = Guid.NewGuid(),
+                    InventoryId = inventory.Id,
+                    QuantityChange = -totalNeeded, // Ghi âm vì là xuất kho
+                    TransactionType = "Sale",
+                    ReferenceId = order.Id.ToString(), // Link với mã đơn hàng
+                    Note = $"Xuất kho cho đơn hàng mới",
+                    CreatedAt = DateTime.UtcNow
+                };
+                await inventoryTransactionRepo.AddAsync(transaction);
+            }
+
 
             // Đưa Order vào danh sách chờ thêm mới
             await _unitOfWork.OrderRepository.AddAsync(order);
