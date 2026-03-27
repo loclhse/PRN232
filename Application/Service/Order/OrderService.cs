@@ -144,11 +144,19 @@ namespace Application.Service.Order
             // Tính tiền khách phải trả cuối cùng
             order.FinalAmount = order.TotalAmount - order.DiscountAmount + backendShippingFee;
 
-            // [LUỒNG TỰ ĐỘNG]: Nếu COD -> Tự động Confirmed. Nếu Online -> Pending chờ thanh toán
-            order.CurrentStatus = request.PaymentMethod == "COD" ? OrderStatus.Confirmed : OrderStatus.Pending;
+            // [LUỒNG TỰ ĐỘNG]:
+            // COD    -> tự động Confirmed và trừ kho ngay
+            // Online -> Pending chờ thanh toán, chỉ kiểm tra tồn kho chứ chưa trừ
+            order.CurrentStatus = request.PaymentMethod == "COD"
+                ? OrderStatus.Confirmed
+                : OrderStatus.Pending;
 
-            // BÓC TÁCH GIỎ QUÀ VÀ TRỪ TỒN KHO (INVENTORY)
-            
+            // Chỉ COD mới được trừ kho ngay tại bước tạo đơn
+            var shouldDeductInventoryNow = string.Equals(request.PaymentMethod, "COD", StringComparison.OrdinalIgnoreCase);
+
+            // =======================================================
+            // BÓC TÁCH GIỎ QUÀ VÀ KIỂM TRA / TRỪ TỒN KHO
+            // =======================================================
             var requiredProducts = new Dictionary<Guid, int>();
 
             // 4.1 Bóc tách toàn bộ chi tiết đơn hàng ra thành Product gốc
@@ -164,14 +172,13 @@ namespace Application.Service.Order
                 }
                 else if (detail.GiftBoxId.HasValue)
                 {
-                    // SỬA Ở ĐÂY: Dùng bảng BoxComponent thay vì GiftBoxComponentConfig
                     var components = await _unitOfWork.Repository<Domain.Entities.BoxComponent>()
                         .FindAsync(c => c.GiftBoxId == detail.GiftBoxId.Value);
 
                     foreach (var component in components)
                     {
-                        var pId = component.ProductId; // Đã có ProductId chuẩn xác
-                        var totalNeeded = detail.Quantity * component.Quantity; // Số lượng hộp * số lượng món trong hộp
+                        var pId = component.ProductId;
+                        var totalNeeded = detail.Quantity * component.Quantity;
 
                         if (requiredProducts.ContainsKey(pId))
                             requiredProducts[pId] += totalNeeded;
@@ -184,7 +191,9 @@ namespace Application.Service.Order
             var inventoryRepo = _unitOfWork.Repository<Domain.Entities.Inventory>();
             var inventoryTransactionRepo = _unitOfWork.Repository<Domain.Entities.InventoryTransaction>();
 
-            // 4.2 Kiểm tra số lượng và tiến hành trừ kho
+            // 4.2 Với mọi đơn: luôn kiểm tra tồn kho trước
+            // COD    -> kiểm tra xong thì trừ luôn
+            // Online -> chỉ kiểm tra, chưa trừ
             foreach (var item in requiredProducts)
             {
                 var pId = item.Key;
@@ -199,19 +208,34 @@ namespace Application.Service.Order
                     throw new Exception($"Sản phẩm '{productName}' không đủ số lượng trong kho. Cần: {totalNeeded}, Hiện có: {inventory?.Quantity ?? 0}");
                 }
 
-                // Trừ kho
+                // Online: dừng ở mức validate tồn kho, chưa trừ
+                if (!shouldDeductInventoryNow)
+                {
+                    continue;
+                }
+
+                // COD: trừ kho ngay
                 inventory.Quantity -= totalNeeded;
+                inventory.LastUpdated = DateTime.UtcNow;
+
+                if (inventory.Quantity == 0)
+                    inventory.Status = InventoryStatus.OutOfStock;
+                else if (inventory.Quantity <= inventory.MinStockLevel)
+                    inventory.Status = InventoryStatus.LowStock;
+                else
+                    inventory.Status = InventoryStatus.InStock;
+
                 inventoryRepo.Update(inventory);
 
-                // Ghi lịch sử biến động kho
+                // Ghi lịch sử biến động kho chỉ cho COD
                 var transaction = new Domain.Entities.InventoryTransaction
                 {
                     Id = Guid.NewGuid(),
                     InventoryId = inventory.Id,
-                    QuantityChange = -totalNeeded, // Ghi âm vì là xuất kho
+                    QuantityChange = -totalNeeded,
                     TransactionType = "Sale",
-                    ReferenceId = order.Id.ToString(), // Link với mã đơn hàng
-                    Note = $"Xuất kho cho đơn hàng mới",
+                    ReferenceId = order.Id.ToString(),
+                    Note = "Xuất kho ngay khi tạo đơn COD",
                     CreatedAt = DateTime.UtcNow
                 };
                 await inventoryTransactionRepo.AddAsync(transaction);
