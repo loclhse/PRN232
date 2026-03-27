@@ -166,5 +166,88 @@ namespace Application.Service.Dashboard
 
             return result;
         }
+
+
+        // 4. API TOP SẢN PHẨM BÁN CHẠY NHẤT (Có thể bao gồm cả GiftBox, nhưng phải phân biệt được loại nào là Product, loại nào là GiftBox)
+        public async Task<List<BestSellerItemDto>> GetBestSellersAsync(DateTime startDate, DateTime endDate, int limit = 5)
+        {
+            // 1. Lấy tất cả đơn hàng đã giao thành công
+            var orders = await _unitOfWork.OrderRepository.FindAsync(
+                filter: o => o.CurrentStatus == OrderStatus.Delivered
+                          && !o.IsDeleted
+                          && o.CreatedAt >= startDate
+                          && o.CreatedAt <= endDate,
+                includeProperties: "OrderDetails"
+            );
+
+            var result = new List<BestSellerItemDto>();
+            if (!orders.Any()) return result;
+
+            var allOrderDetails = orders.SelectMany(o => o.OrderDetails).ToList();
+
+            // 2. Thống kê theo Product (Những dòng chi tiết có ProductId)
+            var productSales = allOrderDetails
+                .Where(od => od.ProductId.HasValue)
+                .GroupBy(od => od.ProductId!.Value)
+                .Select(g => new BestSellerItemDto
+                {
+                    ItemId = g.Key,
+                    ItemType = "Product",
+                    TotalSoldQuantity = g.Sum(od => od.Quantity),
+                    TotalRevenue = g.Sum(od => od.Quantity * od.UnitPrice) //
+                });
+
+            // 3. Thống kê theo GiftBox của CỬA HÀNG (IsCustom == false)
+            var giftBoxIdsInOrders = allOrderDetails
+                .Where(od => od.GiftBoxId.HasValue)
+                .Select(od => od.GiftBoxId!.Value)
+                .Distinct()
+                .ToList();
+
+            // Truy vấn database để lọc ra các GiftBox của cửa hàng
+            var storeGiftBoxes = await _unitOfWork.Repository<Domain.Entities.GiftBox>().FindAsync(
+                filter: gb => giftBoxIdsInOrders.Contains(gb.Id) && gb.IsCustom == false //
+            );
+            var storeGiftBoxIds = storeGiftBoxes.Select(gb => gb.Id).ToHashSet();
+
+            // Lấy doanh số của các GiftBox hợp lệ
+            var giftBoxSales = allOrderDetails
+                .Where(od => od.GiftBoxId.HasValue && storeGiftBoxIds.Contains(od.GiftBoxId.Value)) //
+                .GroupBy(od => od.GiftBoxId!.Value)
+                .Select(g => new BestSellerItemDto
+                {
+                    ItemId = g.Key,
+                    ItemType = "GiftBox",
+                    TotalSoldQuantity = g.Sum(od => od.Quantity),
+                    TotalRevenue = g.Sum(od => od.Quantity * od.UnitPrice) //
+                });
+
+            // 4. Gộp cả 2 danh sách, Sắp xếp giảm dần theo số lượng bán và lấy limit
+            var topItemsData = productSales.Concat(giftBoxSales)
+                .OrderByDescending(x => x.TotalSoldQuantity)
+                .Take(limit)
+                .ToList();
+
+            var productRepo = _unitOfWork.Repository<Domain.Entities.Product>();
+
+            // 5. Gắn tên (ItemName) cho từng loại
+            foreach (var item in topItemsData)
+            {
+                if (item.ItemType == "Product")
+                {
+                    var product = await productRepo.GetByIdAsync(item.ItemId);
+                    item.ItemName = product?.Name ?? "Sản phẩm không xác định";
+                }
+                else if (item.ItemType == "GiftBox")
+                {
+                    var giftBox = storeGiftBoxes.FirstOrDefault(gb => gb.Id == item.ItemId);
+                    item.ItemName = giftBox?.Name ?? "Giỏ quà không xác định";
+                }
+
+                result.Add(item);
+            }
+
+            return result;
+        }
     }
 }
