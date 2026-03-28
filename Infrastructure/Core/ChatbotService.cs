@@ -149,11 +149,11 @@ Output:
 
 Input: "tôi chỉ có 500k thì mua món nào"
 Output:
-{"needProductSearch":true,"products":[],"attributes":[],"occasion":"","recipient":"","minPrice":null,"maxPrice":500000,"sortPrice":"desc","origin":[],"description":"tìm món tốt nhất trong tầm giá 500k"}
+{"needProductSearch":true,"products":[],"attributes":[],"occasion":"","recipient":"","minPrice":null,"maxPrice":500000,"sortPrice":"desc","origin":[],"description":""}
 
 Input: "tìm cho tôi món nào rẻ nhất dưới 200k"
 Output:
-{"needProductSearch":true,"products":[],"attributes":[],"occasion":"","recipient":"","minPrice":null,"maxPrice":200000,"sortPrice":"asc","origin":[],"description":"tìm món rẻ nhất dưới 200k"}
+{"needProductSearch":true,"products":[],"attributes":[],"occasion":"","recipient":"","minPrice":null,"maxPrice":200000,"sortPrice":"asc","origin":[],"description":""}
 
 Input: "quà gì đó ấm áp và sang trọng"
 Output:
