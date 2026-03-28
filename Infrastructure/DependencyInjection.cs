@@ -15,6 +15,7 @@ using Application.Service.InventoryTransactionService;
 using Application.Service.MomoPayment;
 using Application.Service.Order;
 using Application.Service.Product;
+using Application.Service.Report;
 using Application.Service.Security;
 using Application.Service.User;
 using AutoMapper;
@@ -82,6 +83,7 @@ namespace Infrastructure
             services.AddScoped<ICustomBasketImageService, CustomBasketImageService>();
             services.AddScoped<IChangePasswordService, ChangePasswordService>();
             services.AddScoped<IPasswordHasher, PasswordHasher>();
+            services.AddScoped<IReportService, ReportService>();
             // Register background service for cleanup
             services.AddHostedService<TempFileCleanupService>();
 
